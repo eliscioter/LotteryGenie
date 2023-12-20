@@ -139,3 +139,30 @@ def delete_data():
     Results.objects.all().delete()
     Summary.objects.all().delete()
     return {"message": "Deleted"}
+
+def check_combinations(combinations, category):
+    games = {
+        "42": "6/42 Lotto",
+        "45": "6/45 Mega Lotto",
+        "49": "6/49 Super Lotto",
+        "55": "6/55 Grand Lotto",
+        "58": "6/58 Ultra Lotto",
+    }
+    
+    data = Results.objects
+    
+    if category not in games:
+        return {"message": "Invalid category"}
+    
+    if not data.filter(category=games[category]).exists():
+        return {"message": "No data"}
+    
+    game = games[category]
+    
+    winning_combination = data.filter(category=game, combination=combinations).exists()
+    
+    if winning_combination:
+        return {"message": "You won"}
+    else:
+        return {"message": "You did not win"}
+    
