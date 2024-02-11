@@ -1,0 +1,1 @@
+use cmd to open virtual environment
