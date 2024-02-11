@@ -111,6 +111,7 @@ def save_data(result: Results):
 def save_summary(result: Results):
     try:
         result.save()
+        
     except Exception as e:
         print(f"Error: {e}")
 
