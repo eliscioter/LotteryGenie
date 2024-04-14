@@ -6,6 +6,8 @@ const light_blue_green = "#596869";
 const grey = "#515751";
 const white = "#F5F9E9";
 const light_grey = "#C2C1A5";
+const green = "#008000";
+const red = "#880808";
 
 export default {
   light: {
@@ -27,4 +29,6 @@ export default {
   grey,
   white,
   light_grey,
+  green,
+  red,
 };
