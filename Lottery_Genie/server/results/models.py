@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Results(models.Model):
-    date = models.DateField()
+    date = models.DateField(null=True)
     category = models.CharField(max_length=20)
     combination = models.CharField(max_length=17)
     prize = models.CharField(max_length=20, null=True)
