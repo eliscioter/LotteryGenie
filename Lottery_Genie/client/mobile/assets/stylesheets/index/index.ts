@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 export const index_styles = StyleSheet.create({
   container: {
     height: "100%",
-    paddingTop: 20,
+    paddingTop: 10,
     backgroundColor: Colors.forest_green,
   },
   title: {
@@ -16,6 +16,7 @@ export const index_styles = StyleSheet.create({
   },
   current_category: {
     backgroundColor: Colors.forest_green,
+    paddingBottom: 10,
   },
   lotto_category: {
     color: Colors.light_grey,
@@ -26,7 +27,7 @@ export const index_styles = StyleSheet.create({
     color: Colors.white,
     textAlign: "center",
     fontSize: 30,
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
   input_form_container: {
     height: "100%",
@@ -40,16 +41,26 @@ export const index_styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     backgroundColor: Colors.light_blue_green,
-    paddingBottom: 20,
+    paddingBottom: 30,
+    zIndex: 5,
   },
   input_text_container: {
     display: "flex",
     flexDirection: "row",
     justifyContent: "center",
     backgroundColor: Colors.light_blue_green,
+    zIndex: 0,
+  },
+  submit_input_container: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    marginTop: 10,
   },
   input_options_button: {
-    height: 40,
+    height: 50,
     padding: 10,
     marginLeft: 10,
     backgroundColor: Colors.grey,
@@ -58,25 +69,52 @@ export const index_styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  input_options_picker: {
+    height: 20,
+    width: 120,
+    marginLeft: 10,
+    backgroundColor: Colors.grey,
+    color: Colors.light_grey,
+    borderRadius: 10,
+    borderWidth: 0,
+    zIndex: 10,
+    
+  },
+  combinations_container: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    backgroundColor: Colors.light_blue_green,
+    paddingBottom: 10,
+  },
   input_text_button: {
-    width: "20%",
     height: 40,
     backgroundColor: Colors.grey,
-    borderBottomRightRadius: 10,
-    borderTopRightRadius: 10,
+    borderRadius: 10,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    width: 100,
+  },
+  clear_text_button: {
+    height: 40,
+    backgroundColor: Colors.red,
+    borderRadius: 10,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 100,
   },
   input_text: {
-    width: "80%",
+    
+    width: "10%",
     borderWidth: 1,
-    borderRightWidth: 0,
     borderColor: Colors.light_grey,
+    color: "white",
     height: 40,
-    borderBottomLeftRadius: 10,
-    borderTopLeftRadius: 10,
+    borderRadius: 10,
     padding: 10,
+    textAlign: "center",
   },
   result_container: {
     backgroundColor: Colors.light_blue_green,
@@ -118,5 +156,18 @@ export const index_styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 30,
     paddingTop: 20,
+  },
+  transparent_background: {
+    backgroundColor: "transparent",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+  },
+  category_dropdown: {
+    backgroundColor: Colors.forest_green,
+    alignItems: "flex-end",
+    borderWidth: 1,
+    borderColor: Colors.light_blue_green,
+    width: 75,
   },
 });
