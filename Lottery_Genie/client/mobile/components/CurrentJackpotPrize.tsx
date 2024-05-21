@@ -1,16 +1,28 @@
 import React from "react";
 import { Text, View } from "./Themed";
 import { index_styles } from "@/assets/stylesheets/index";
+import { useCurrentResults } from "@/services/apis/current-results";
 
 export default function CurrentJackpotPrize() {
+  const { data: results, isLoading, isError } = useCurrentResults();
+
+  
   return (
     <View>
-      <View style={index_styles.current_category}>
-        <Text style={index_styles.lotto_category}>6/49</Text>
-        <Text style={index_styles.lotto_prize}>Php. 15,000,000.00</Text>
-        <Text style={index_styles.lotto_category}>6/55</Text>
-        <Text style={index_styles.lotto_prize}>Php. 5,000,000.00</Text>
-      </View>
+      {!results ? (
+        <View>
+          <Text style={index_styles.lotto_category}>No Results</Text>
+        </View>
+      ) : (
+        <View style={index_styles.current_category}>
+          {results.data.map((result, index) => (
+            <View style={{backgroundColor: "transparent", paddingBottom: 10}} key={index}>
+              <Text style={index_styles.lotto_category}>{result.category}</Text>
+              <Text style={index_styles.lotto_prize}>{result.prize}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
