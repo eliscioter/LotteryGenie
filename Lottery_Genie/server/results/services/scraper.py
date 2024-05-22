@@ -5,8 +5,7 @@ import os
 from ..models import Results, Summary
 import dateparser
 from fake_useragent import UserAgent
-from datetime import date, timedelta
-import json
+from datetime import date, timedelta, datetime
 
 load_dotenv()
 
@@ -17,7 +16,7 @@ def replace_php(prize):
         
 def scrape_pcso():
     print("Scraping...")
-    url = os.environ["WEB_URL"]
+    url = os.environ.get("WEB_URL")
 
     page = requests.get(url).text
 
@@ -25,7 +24,7 @@ def scrape_pcso():
 
     ultra = soup.find(text="6/58 Ultra Lotto").find_parent("table").find_all("td")
     dateUltra = soup.find(text="6/58 Ultra Lotto").find_parent("table").find_all("th")
-    print(ultra)
+    
     ultraCombination = ultra[1].text
     ultraDate = dateUltra[1].text
     ultraPrize = ultra[3].text
@@ -140,7 +139,7 @@ def scrape_pcso():
 
 
 def scrape_summary(category):
-    base_url = os.environ["WEB_URL"]
+    base_url = os.environ.get("WEB_URL")
 
     url = f"{base_url}/6-{category}-lotto-result-history-and-summary"
 
@@ -237,7 +236,7 @@ def delete_data():
     return {"message": "Deleted"}
 
 
-def check_combinations(combinations, category):
+def check_combinations(combinations, category, date):
     games = {
         "42": "6/42 Lotto",
         "45": "6/45 Mega Lotto",
@@ -245,8 +244,10 @@ def check_combinations(combinations, category):
         "55": "6/55 Grand Lotto",
         "58": "6/58 Ultra Lotto",
     }
-
     data = Results.objects
+    
+    parsed_date = datetime.fromisoformat(date)
+    formatted_date = datetime.strftime(parsed_date, "%Y-%m-%d")
 
     if category not in games:
         return {"message": "Invalid category"}
@@ -256,7 +257,9 @@ def check_combinations(combinations, category):
 
     game = games[category]
 
-    winning_combination = data.filter(category=game, combination=combinations).exists()
+    numbers_joined = '-'.join([str(num) for num in combinations])
+
+    winning_combination = data.filter(category=game, combination=numbers_joined, date=formatted_date).exists()
 
     if winning_combination:
         return {"message": "You won"}
