@@ -19,13 +19,11 @@ def delete(_):
     data = scraper.delete_data()
     return JsonResponse(data)
 
-User = NamedTuple("User", [("combinations", str)])
+LottoDetails = NamedTuple("LottoDetails", [("combination", str), ("category", str), ("date", str)])
 
 @csrf_exempt
-def combinations(request, category):
+def combinations(request):
     data = json.loads(request.body.decode())
-    user = User(**data)
-    
-    response = scraper.check_combinations(user.combinations, category)
-    
+    lotto_details = LottoDetails(**data)
+    response = scraper.check_combinations(lotto_details.combination, lotto_details.category, lotto_details.date)
     return JsonResponse(response)
