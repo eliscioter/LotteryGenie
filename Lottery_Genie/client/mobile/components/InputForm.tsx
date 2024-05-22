@@ -6,18 +6,11 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { lotto_categories } from "@/constants/Categories";
 import { Controller, SubmitErrorHandler, useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Toast from "react-native-toast-message";
-
-
-const InputSchema = z.object({
-  category: z.string(),
-  date: z.date(),
-  input: z.array(z.string().min(1).max(2)),
-});
-
-type InputType = z.infer<typeof InputSchema>;
+import { useCheckCombinationMutation } from "@/services/apis/current-results";
+import { LottoDetails } from "@/types/results-type";
+import { InputSchema } from "@/validators/current-results";
 
 export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
@@ -28,7 +21,9 @@ export default function InputForm() {
     control,
     handleSubmit,
     reset,
-  } = useForm<InputType>({ resolver: zodResolver(InputSchema) });
+  } = useForm<LottoDetails>({ resolver: zodResolver(InputSchema) });
+
+  const check_combination_mutation = useCheckCombinationMutation();
 
   const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
@@ -70,7 +65,12 @@ export default function InputForm() {
 
   // }, [inputs, refs]);
 
-  const handleError: SubmitErrorHandler<InputType> = (errors) => {
+  const handleSubmitCombination = async (data: LottoDetails) => {
+    console.log(data);
+    check_combination_mutation.mutateAsync(data);
+  }
+
+  const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
     console.log(errors);
     Toast.show({
       type: "error",
@@ -157,7 +157,7 @@ export default function InputForm() {
                 style={index_styles.input_text}
               />
             )}
-            name={`input.${index}`}
+            name={`combination.${index}`}
           />
         ))}
       </View>
@@ -173,9 +173,7 @@ export default function InputForm() {
         </TouchableOpacity>
         <TouchableOpacity
           style={index_styles.input_text_button}
-          onPress={handleSubmit((data) => {
-            console.log(data);
-          }, handleError)}
+          onPress={handleSubmit(handleSubmitCombination, handleError)}
         >
           <Text style={index_styles.light_grey_text}>Check</Text>
         </TouchableOpacity>

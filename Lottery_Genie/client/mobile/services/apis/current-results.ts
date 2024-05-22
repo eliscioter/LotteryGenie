@@ -1,6 +1,6 @@
 import api from "@/config/axios";
-import { ResultsType } from "@/types/results-type";
-import { useQuery } from "@tanstack/react-query";
+import { LottoDetails, ResultsType } from "@/types/results-type";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
 export const useCurrentResults = () =>
@@ -19,4 +19,13 @@ export const useCurrentResults = () =>
             }
           }
     },
+  });
+
+export const useCheckCombinationMutation = () =>
+  useMutation<
+    LottoDetails & RequestError,
+    AxiosError,
+    LottoDetails
+  >({
+    mutationFn: async (data) =>(await api.post('/check-combinations', data)).data,
   });
