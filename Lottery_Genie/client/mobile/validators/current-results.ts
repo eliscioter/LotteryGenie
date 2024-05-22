@@ -12,3 +12,9 @@ export const lotteryResultSchema = z.object({
   prize: z.string(),
   winners: z.string(),
 });
+
+export const InputSchema = z.object({
+  category: z.string(),
+  date: z.date(),
+  combination: z.array(z.string().min(1).max(2)),
+});
