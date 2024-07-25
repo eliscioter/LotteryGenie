@@ -17,4 +17,5 @@ export const InputSchema = z.object({
   category: z.string(),
   date: z.date(),
   combination: z.array(z.string().min(1).max(2)),
+  prize: z.string().optional(),
 });
