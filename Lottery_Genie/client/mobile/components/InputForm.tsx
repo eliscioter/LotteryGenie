@@ -12,18 +12,21 @@ import { useCheckCombinationMutation } from "@/services/apis/current-results";
 import { LottoDetails } from "@/types/results-type";
 import { InputSchema } from "@/validators/current-results";
 
-export default function InputForm() {
+export default function InputForm({
+  input,
+  result_data,
+}: {
+  input: (data: string[]) => void;
+  result_data: (data: LottoDetails) => void;
+}) {
   const [date, setDate] = useState<string | Date>("Select Date");
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
-  // const [value, setValue] = useState(null);
-  const {
-    control,
-    handleSubmit,
-    reset,
-  } = useForm<LottoDetails>({ resolver: zodResolver(InputSchema) });
+  const { control, handleSubmit, reset } = useForm<LottoDetails>({
+    resolver: zodResolver(InputSchema),
+  });
 
-  const check_combination_mutation = useCheckCombinationMutation();
+  const { data: result, mutateAsync } = useCheckCombinationMutation();
 
   const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
@@ -41,34 +44,14 @@ export default function InputForm() {
 
   const inputs = ["", "", "", "", "", ""];
 
-  // console.log(inputs);
-
-  // const refs = Array(inputs.length)
-  //   .fill(null)
-  //   .map(() => React.createRef<TextInput>());
-  // useEffect(() => {
-  //   console.log(inputs.length, "outer", inputs.some((input) => {
-  //     console.log(input, "middle")
-  //     return input.length === 2}));
-  //   if (inputs.some((input) => input.length === 2)) {
-  //     const nextInputIndex =
-  //       inputs.findIndex((input) => {
-  //         console.log(input, "outer outer");
-  //         return input.length === 2}) + 1;
-
-  //       console.log(nextInputIndex);
-  //     if (nextInputIndex < inputs.length) {
-  //       console.log(nextInputIndex, " inner");
-  //       refs[nextInputIndex].current?.focus();
-  //     }
-  //   }
-
-  // }, [inputs, refs]);
-
   const handleSubmitCombination = async (data: LottoDetails) => {
     console.log(data);
-    check_combination_mutation.mutateAsync(data);
-  }
+    await mutateAsync(data);
+    if (result) {
+      result_data(result);
+      input(data.combination);
+    }
+  };
 
   const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
     console.log(errors);
@@ -141,7 +124,7 @@ export default function InputForm() {
         </TouchableOpacity>
       </View>
       <View style={index_styles.combinations_container}>
-        {inputs.map((input, index) => (
+        {inputs.map((_, index) => (
           <Controller
             key={index}
             control={control}
