@@ -1,6 +1,6 @@
 import json
 from typing import NamedTuple
-from django.http import HttpRequest, JsonResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .services import scraper
 
