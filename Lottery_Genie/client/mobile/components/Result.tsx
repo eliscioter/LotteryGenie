@@ -2,16 +2,15 @@ import Colors from "@/constants/Colors";
 import { View, Text } from "./Themed";
 import { index_styles } from "@/assets/stylesheets/index";
 import { useCurrentResultStore } from "@/services/shared/result";
+import { useContext } from "react";
+import { CombCtx } from "@/app/(tabs)";
 
-export default function Result({ input }: { input: string[] }) {
+export default function Result() {
   const { result } = useCurrentResultStore();
-
-  const numbersGotRight = result?.combination.filter((num) =>
-    input.includes(num)
-  ).length;
+  const {input_combination} = useContext(CombCtx);
 
   const responseMessage = () => {
-    switch (numbersGotRight) {
+    switch (result?.result.count) {
       case 6:
         return "Congratulations, You won the 1st prize!";
       case 5:
@@ -27,18 +26,20 @@ export default function Result({ input }: { input: string[] }) {
 
   return (
     <View style={index_styles.result_container}>
-      {input[0] && (
+      {input_combination[0] && (
         <>
           <Text style={{ color: Colors.light_grey, textAlign: "center" }}>
-            You got {numbersGotRight} out of 6
+            You got {result?.result.count} out of 6
           </Text>
-          <Text style={{ color: Colors.light_grey, textAlign: "center" }}>{responseMessage()}</Text>
+          <Text style={{ color: Colors.light_grey, textAlign: "center" }}>
+            {responseMessage()}
+          </Text>
           <View style={index_styles.winning_combinations_container}>
             {result?.combination.map((num, index) => (
               <View
                 key={index}
                 style={
-                  input.some((inputNum) => inputNum === num)
+                  input_combination.some((inputNum) => inputNum === num)
                     ? index_styles.correct_number_container
                     : index_styles.incorrect_number_container
                 }
@@ -47,7 +48,11 @@ export default function Result({ input }: { input: string[] }) {
               </View>
             ))}
           </View>
-          <Text style={index_styles.prize_won_text}>You won ₱ 15,000,000</Text>
+          {result?.result && result?.result.count >= 3 && (
+            <Text style={index_styles.prize_won_text}>
+              You won {result?.prize_amount}
+            </Text>
+          )}
         </>
       )}
     </View>
