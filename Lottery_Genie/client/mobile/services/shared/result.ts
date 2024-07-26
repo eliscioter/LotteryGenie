@@ -1,9 +1,9 @@
-import { LottoDetails } from "@/types/results-type";
+import { ResultType } from "@/types/results-type";
 import { create } from "zustand";
 
 interface ResultStore {
-    result: Nullable<LottoDetails>;
-    setResult: (result: LottoDetails) => void;
+    result: Nullable<ResultType>;
+    setResult: (result: ResultType) => void;
     clearResult: () => void;
 }
 

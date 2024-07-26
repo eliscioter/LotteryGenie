@@ -1,5 +1,5 @@
 import api from "@/config/axios";
-import { LottoDetails, ResultsType } from "@/types/results-type";
+import { LottoDetails, ResultsType, ResultType } from "@/types/results-type";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
@@ -23,7 +23,7 @@ export const useCurrentResults = () =>
 
 export const useCheckCombinationMutation = () =>
   useMutation<
-    LottoDetails & RequestError,
+    ResultType & RequestError,
     AxiosError,
     LottoDetails
   >({
