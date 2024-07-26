@@ -182,8 +182,12 @@ def scrape_pcso():
 
 
 def scrape_summary(category):
-    """Scapes the summary of the lotto results  based on the category and save it to the database then return it"""
+    """
+    Scapes the summary of the lotto results based on the category
+    Save it to the database then return it
+    """
     print("Scraping summary...")
+
     base_url = os.environ.get("WEB_URL")
 
     url = f"{base_url}/6-{category}-lotto-result-history-and-summary"
@@ -209,7 +213,7 @@ def scrape_summary(category):
 
         game_date = content[0].text
         combination = content[1].text
-        prize = content[2].text
+        prize = replace_php(content[2].text)
 
         data.append({"date": game_date, "combination": combination, "prize": prize})
 
@@ -290,10 +294,10 @@ def scrape_prizes(category):
 
     prizes = soup.find(text="1st Prize").find_parent("table").find_all("td")
 
-    first_prize = prizes[2].text
-    second_prize = prizes[5].text
-    third_prize = prizes[8].text
-    fourth_prize = prizes[11].text
+    first_prize = replace_php(prizes[2].text)
+    second_prize = replace_php(prizes[5].text)
+    third_prize = replace_php(prizes[8].text)
+    fourth_prize = replace_php(prizes[11].text)
 
     prizes_obj = Prizes(
         category=category,
@@ -324,16 +328,29 @@ def check_won_prize(category, correct_combination_count):
 
     match correct_combination_count:
         case 6:
-            return data.filter(category=category).values("first_prize")
-        case 5:
-            return data.filter(category=category).values("second_prize")
-        case 4:
-            return data.filter(category=category).values("third_prize")
-        case 3:
-            print(
-                f"fourth prize: {data.filter(category=category).values('fourth_prize')}"
+            return (
+                data.filter(category=category)
+                .values("first_prize")
+                .get()["first_prize"]
             )
-            return data.filter(category=category).values("fourth_prize")
+        case 5:
+            return (
+                data.filter(category=category)
+                .values("second_prize")
+                .get()["second_prize"]
+            )
+        case 4:
+            return (
+                data.filter(category=category)
+                .values("third_prize")
+                .get()["third_prize"]
+            )
+        case 3:
+            return (
+                data.filter(category=category)
+                .values("fourth_prize")
+                .get()["fourth_prize"]
+            )
         case _:
             return -1
 
@@ -364,8 +381,12 @@ def check_combinations(combinations, category, draw_date):
         "6/55 Grand Lotto": "6/55 Grand Lotto",
         "6/58 Ultra Lotto": "6/58 Ultra Lotto",
     }
-    # ! data should be getting from summary based on the category
-    data = Results.objects
+    data = Summary.objects
+
+    extracted_category = category.split("/")[1].split(" ")[0]
+
+    if not data.count():
+        scrape_summary(category=extracted_category)
 
     parsed_date = datetime.fromisoformat(draw_date)
     formatted_date = datetime.strftime(parsed_date, "%Y-%m-%d")
@@ -373,22 +394,18 @@ def check_combinations(combinations, category, draw_date):
     if category not in games:
         return {"message": "Invalid category"}
 
-    if not data.filter(category=games[category]).exists():
+    if not data.filter(category=extracted_category).exists():
         return {"message": "No data"}
-
-    game = games[category]
 
     numbers_joined = "-".join([str(num) for num in combinations])
 
     winning_combination = data.filter(
-        category=game, combination=numbers_joined, date=formatted_date
+        category=extracted_category, combination=numbers_joined, date=formatted_date
     ).values()
-
-    extracted_category = category.split("/")[1].split(" ")[0]
 
     if winning_combination.count() == 0:
         right_combination = list(
-            data.filter(category=game, date=formatted_date).values()
+            data.filter(category=extracted_category, date=formatted_date).values()
         )
 
         numbers_list = reconvert_to_array(right_combination[0]["combination"])
@@ -404,9 +421,8 @@ def check_combinations(combinations, category, draw_date):
             "date": right_combination[0]["date"],
             "combination": numbers_list,
             "prize": right_combination[0]["prize"],
-            "winners": right_combination[0]["winners"],
             "result": compared_combinations,
-            "prize_amount": prize_amount.get() if prize_amount != -1 else "No Prize",
+            "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
         }
 
     if winning_combination.count() == 1:
@@ -428,9 +444,8 @@ def check_combinations(combinations, category, draw_date):
             "date": winning_combination[0]["date"],
             "combination": winning_combination_list,
             "prize": winning_combination[0]["prize"],
-            "winners": winning_combination[0]["winners"],
             "result": compared_combinations,
-            "prize_amount": prize_amount.get() if prize_amount != -1 else "No Prize",
+            "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
         }
 
     return {"message": "Error"}
