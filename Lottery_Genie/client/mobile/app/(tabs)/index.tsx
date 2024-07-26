@@ -3,29 +3,38 @@ import CurrentJackpotPrize from "@/components/CurrentJackpotPrize";
 import InputForm from "@/components/InputForm";
 import Result from "@/components/Result";
 import { Text, View } from "@/components/Themed";
-import { useCurrentResultStore } from "@/services/shared/result";
-import { LottoDetails } from "@/types/results-type";
-import { useState } from "react";
+import { createContext, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 
+export const CombCtx = createContext({
+  input_combination: ["", "", "", "", "", ""],
+  setInputCombination: (input_combination: string[]) => {},
+});
+
 export default function TabOneScreen() {
-  const { setResult } = useCurrentResultStore();
-  const [input_combination, setInputCombination] = useState<string[]>(["", "", "", "", "", ""]);
+  const [input_combination, setInputCombination] = useState<string[]>([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
 
-  const handleFetchResponse = (data: LottoDetails) => {
-    setResult(data);
-  }
+  const update_input_comb = useMemo(
+    () => ({ input_combination, setInputCombination }),
+    [input_combination]
+  );
 
-  const handleInputCombination = (data: string[]) => {
-    setInputCombination(data);
-  }
   return (
     <ScrollView style={index_styles.container}>
       <Text style={index_styles.title}>{new Date().toLocaleDateString()}</Text>
       <CurrentJackpotPrize />
       <View style={index_styles.input_form_container}>
-        <InputForm input={handleInputCombination} result_data={handleFetchResponse} />
-        <Result input={input_combination} />
+        <CombCtx.Provider value={update_input_comb}>
+          <InputForm />
+          <Result />
+        </CombCtx.Provider>
       </View>
     </ScrollView>
   );
