@@ -170,4 +170,18 @@ export const index_styles = StyleSheet.create({
     borderColor: Colors.light_blue_green,
     width: 75,
   },
+  data_status: {
+    color: Colors.light_grey,
+    fontSize: 20,
+    paddingLeft: 20,
+    textAlign: "center",
+  },
+  data_status_input_container: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    backgroundColor: Colors.light_blue_green,
+    marginTop: 20,
+    padding: 20,
+  }
 });
