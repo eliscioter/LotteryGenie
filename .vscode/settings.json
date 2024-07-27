@@ -1,8 +1,10 @@
 {
     "cSpell.words": [
-        "pcso",
-        "dotenv",
         "dateparser",
+        "datetimepicker",
+        "dotenv",
+        "pcso",
         "useragent",
+        "hookform"
     ]
 }
