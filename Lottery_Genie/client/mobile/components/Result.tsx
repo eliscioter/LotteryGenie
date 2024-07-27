@@ -3,7 +3,7 @@ import { View, Text } from "./Themed";
 import { index_styles } from "@/assets/stylesheets/index";
 import { useCurrentResultStore } from "@/services/shared/result";
 import { useContext } from "react";
-import { CombCtx } from "@/app/(tabs)";
+import { CombCtx } from "@/services/shared/user-comb-ctx";
 
 export default function Result() {
   const { result } = useCurrentResultStore();
