@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import { TextInput, TouchableOpacity } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "./Themed";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -9,10 +9,11 @@ import { Controller, SubmitErrorHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Toast from "react-native-toast-message";
 import { useCheckCombinationMutation } from "@/services/apis/current-results";
-import { LottoDetails, ResultType } from "@/types/results-type";
+import { LottoDetails } from "@/types/results-type";
 import { InputSchema } from "@/validators/current-results";
 import { useCurrentResultStore } from "@/services/shared/result";
-import { CombCtx } from "@/app/(tabs)";
+import { CombCtx } from "@/services/shared/user-comb-ctx";
+import Colors from "@/constants/Colors";
 
 export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
@@ -22,15 +23,29 @@ export default function InputForm() {
     resolver: zodResolver(InputSchema),
   });
 
-  const { data: result, mutateAsync } = useCheckCombinationMutation();
+  const {
+    data: result,
+    mutateAsync,
+    isPending,
+    isError,
+  } = useCheckCombinationMutation();
 
   const inputs = ["", "", "", "", "", ""];
 
-  const [user_input, setUserInput] = useState<string[]>(["", "", "", "", "", ""]);
+  const [user_input, setUserInput] = useState<string[]>([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
 
-  const { setResult } = useCurrentResultStore();
+  const { setResult, clearResult } = useCurrentResultStore();
 
-  const { setInputCombination } = useContext(CombCtx);
+  const { setInputCombination, clearInputCombination } = useContext(CombCtx);
+
+  const comb_input_ref = useRef<TextInput[]>([]);
 
   const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
@@ -51,15 +66,7 @@ export default function InputForm() {
     setUserInput(data.combination);
   };
 
-  useEffect(() => {
-    if (result) {
-      setResult(result);
-      setInputCombination(user_input);
-    }
-  }, [result]);
-
   const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
-    console.log(errors);
     Toast.show({
       type: "error",
       text1: "Error",
@@ -68,6 +75,33 @@ export default function InputForm() {
       autoHide: true,
     });
   };
+
+  const changeInputFocus = (index: number, text: string) => {
+    if (text.length === 2 && index < inputs.length - 1) {
+      comb_input_ref.current[index + 1]?.focus();
+    }
+
+    if (text.length === 0 && index === 0) {
+      comb_input_ref.current[index]?.focus();
+    }
+
+    if (text.length === 2 && index === inputs.length - 1) {
+      comb_input_ref.current[index]?.blur();
+    }
+  };
+
+  useEffect(() => {
+    if (result) {
+      setResult(result);
+      setInputCombination(user_input);
+    }
+  }, [result]);
+
+  useEffect(() => {
+    clearInputCombination();
+    clearResult();
+  }, [reset]);
+
   return (
     <>
       <View style={index_styles.options_container}>
@@ -131,16 +165,25 @@ export default function InputForm() {
       <View style={index_styles.combinations_container}>
         {inputs.map((_, index) => (
           <Controller
-            key={index}
+            key={`combination.${index}`}
             control={control}
             render={({ field: { onChange, value } }) => (
               <TextInput
                 key={index}
-                onChangeText={onChange}
-                value={`${value ?? 0}`}
+                ref={(ref) => {
+                  if (ref) {
+                    comb_input_ref.current[index] = ref;
+                  }
+                }}
+                onChangeText={(text) => {
+                  onChange(text);
+                  changeInputFocus(index, text);
+                }}
+                value={`${value ?? ""}`}
                 placeholder="0"
+                placeholderTextColor="white"
                 selectionColor={"white"}
-                keyboardType="numeric"
+                keyboardType="number-pad"
                 maxLength={2}
                 style={index_styles.input_text}
               />
@@ -155,6 +198,8 @@ export default function InputForm() {
           onPress={() => {
             reset();
             setDate("Select Date");
+            clearInputCombination();
+            clearResult();
           }}
         >
           <Text style={index_styles.light_grey_text}>Clear</Text>
@@ -166,6 +211,16 @@ export default function InputForm() {
           <Text style={index_styles.light_grey_text}>Check</Text>
         </TouchableOpacity>
       </View>
+      {isPending && (
+        <View style={index_styles.data_status_input_container}>
+          <ActivityIndicator size="large" color={Colors.white} />
+        </View>
+      )}
+      {isError && (
+        <View style={index_styles.data_status_input_container}>
+          <Text style={{ color: Colors.white }}>Error submitting data</Text>
+        </View>
+      )}
     </>
   );
 }
