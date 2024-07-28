@@ -1,7 +1,6 @@
-
-from . import views
+""" This file contains the URL patterns for the results app. """
 from django.urls import path
-
+from . import views
 
 urlpatterns = [
     path('fetch', views.results, name='results_func'),
