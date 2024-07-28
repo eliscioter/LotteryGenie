@@ -4,7 +4,7 @@ This is also to fetch the data from the database and return it to the user
 """
 
 import os
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 
 from bs4 import BeautifulSoup
 import requests
@@ -59,126 +59,67 @@ def save_prizes(result: Prizes):
         print(f"Error: {e}")
 
 
+def scrape_per_game(game):
+    """Scrape the data for each game and return the data"""
+    try:
+        url = os.environ.get("WEB_URL")
+
+        user_agent = ua.random
+
+        headers = {"User-Agent": user_agent}
+
+        page = requests.get(url, headers=headers, timeout=5).text
+
+        soup = BeautifulSoup(page, "html.parser")
+
+        game_category = soup.find(text=game).find_parent("table").find_all("td")
+        date_game = soup.find(text=game).find_parent("table").find_all("th")
+
+        # Get the data from the scraped data
+        game_combination = game_category[1].text
+        game_date = date_game[1].text
+        game_prize = game_category[3].text
+        game_winners = game_category[5].text
+
+        return game_combination, game_date, game_prize, game_winners
+    except (AttributeError, IndexError) as e:
+        print(f"Error: {e}")
+        return None, None, None, None
+
+
 def scrape_pcso():
     """Scrape the data from the lottoPCSO website and save it to the database"""
     print("Scraping...")
-    url = os.environ.get("WEB_URL")
 
-    page = requests.get(url, timeout=5).text
+    lotto_names = [
+        "6/58 Ultra Lotto",
+        "6/55 Grand Lotto",
+        "/49 Super Lotto",
+        "6/45 Mega Lotto",
+        "6/42 Lotto",
+    ]
 
-    soup = BeautifulSoup(page, "html.parser")
+    flag = False
+    for lotto_name in lotto_names:
+        combination, game_date, prize, winners = scrape_per_game(lotto_name)
+        if not combination or not game_date or not prize or not winners:
+            flag = True
+            break
+        result = Results(
+            date=parsed_date_or_none(game_date),
+            category=lotto_name,
+            combination=combination,
+            prize=replace_php(prize),
+            winners=winners,
+        )
 
-    # TODO: Find a better way to scrape the data
+        # Save all results in a single operation
+        save_data(result)
 
-    # Scrape the Ultra Lotto data: combination, date, prize, winners
-    ultra = soup.find(text="6/58 Ultra Lotto").find_parent("table").find_all("td")
-    date_ultra = soup.find(text="6/58 Ultra Lotto").find_parent("table").find_all("th")
+    if flag:
+        return -1
+    return 1
 
-    # Get the data from the scraped data
-    ultra_combination = ultra[1].text
-    ultra_date = date_ultra[1].text
-    ultra_prize = ultra[3].text
-    ultra_winners = ultra[5].text
-
-    # Create a Results object to save the data to the database
-    result = Results(
-        date=parsed_date_or_none(ultra_date),
-        category="6/58 Ultra Lotto",
-        combination=ultra_combination,
-        prize=replace_php(ultra_prize),
-        winners=ultra_winners,
-    )
-
-    # Append the Ultra Lotto data to the database
-    save_data(result)
-
-    # Scrape the Grand Lotto data: combination, date, prize, winners
-    grand = soup.find(text="6/55 Grand Lotto").find_parent("table").find_all("td")
-    date_grand = soup.find(text="6/55 Grand Lotto").find_parent("table").find_all("th")
-
-    # Get the data from the scraped data
-    grand_combination = grand[1].text
-    grand_date = date_grand[1].text
-    grand_prize = grand[3].text
-    grand_winners = grand[5].text
-
-    # Create a Results object to save the data to the database
-    result2 = Results(
-        date=parsed_date_or_none(grand_date),
-        category="6/55 Grand Lotto",
-        combination=grand_combination,
-        prize=replace_php(grand_prize),
-        winners=grand_winners,
-    )
-
-    # Append the Grand Lotto data to the database
-    save_data(result2)
-
-    # Scrape the Super Lotto data: combination, date, prize, winners
-    super_lotto = soup.find(text="/49 Super Lotto").find_parent("table").find_all("td")
-    date_super = soup.find(text="/49 Super Lotto").find_parent("table").find_all("th")
-
-    # Get the data from the scraped data
-    super_combination = super_lotto[1].text
-    super_date = date_super[1].text
-    super_prize = super_lotto[3].text
-    super_winners = super_lotto[5].text
-
-    # Create a Results object to save the data to the database
-    result3 = Results(
-        date=parsed_date_or_none(super_date),
-        category="6/49 Super Lotto",
-        combination=super_combination,
-        prize=replace_php(super_prize),
-        winners=super_winners,
-    )
-
-    # Append the Super Lotto data to the database
-    save_data(result3)
-
-    # Scrape the Mega Lotto data: combination, date, prize, winners
-    mega = soup.find(text="6/45 Mega Lotto").find_parent("table").find_all("td")
-    date_mega = soup.find(text="6/45 Mega Lotto").find_parent("table").find_all("th")
-
-    # Get the data from the scraped data
-    mega_combination = mega[1].text
-    mega_date = date_mega[1].text
-    mega_prize = mega[3].text
-    mega_winners = mega[5].text
-
-    # Create a Results object to save the data to the database
-    result4 = Results(
-        date=parsed_date_or_none(mega_date),
-        category="6/45 Mega Lotto",
-        combination=mega_combination,
-        prize=replace_php(mega_prize),
-        winners=mega_winners,
-    )
-
-    # Append the Mega Lotto data to the database
-    save_data(result4)
-
-    # Scrape the Regular Lotto data: combination, date, prize, winners
-    regular = soup.find(text="6/42 Lotto").find_parent("table").find_all("td")
-    date_regular = soup.find(text="6/42 Lotto").find_parent("table").find_all("th")
-
-    # Get the data from the scraped data
-    regular_combination = regular[1].text
-    regular_date = date_regular[1].text
-    regular_prize = regular[3].text
-    regular_winners = regular[5].text
-
-    # Create a Results object to save the data to the database
-    result5 = Results(
-        date=parsed_date_or_none(regular_date),
-        category="6/42 Lotto",
-        combination=regular_combination,
-        prize=replace_php(regular_prize),
-        winners=regular_winners,
-    )
-
-    # Append the Regular Lotto data to the database
-    save_data(result5)
 
 
 def scrape_summary(category):
@@ -231,23 +172,22 @@ def scrape_summary(category):
 def fetch_data():
     """Fetch the data from the database and return it to the user"""
     today = date.today()
-    yesterday = today - timedelta(days=1)
 
     data = Results.objects.filter(date=today)
+
     if data.count():
         return {"data": list(data.values())}
-    elif not data.count():
-        data = Results.objects.filter(date=yesterday)
-        if data.count():
-            return {"data": list(data.values())}
-        elif not data.count():
-            scrape_pcso()
-            data = Results.objects.filter(date=today)
-            return {"data": list(data.values())}
-        else:
+
+    if not data.count():
+        res = scrape_pcso()
+        # Check if data is completely scraped
+        if res == -1:
             return {"message": "No data"}
-    else:
-        return {"message": "No data"}
+
+        data = Results.objects.filter(date=today)
+        return {"data": list(data.values())}
+
+    return {"message": "No data"}
 
 
 def fetch_summary(category):
