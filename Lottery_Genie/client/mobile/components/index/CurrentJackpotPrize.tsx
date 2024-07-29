@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "./Themed";
+import { Text, View } from "../Themed";
 import { index_styles } from "@/assets/stylesheets/index";
 import { useCurrentResults } from "@/services/apis/current-results";
 import { ActivityIndicator } from "react-native";

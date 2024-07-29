@@ -1,5 +1,5 @@
 import Colors from "@/constants/Colors";
-import { View, Text } from "./Themed";
+import { View, Text } from "../Themed";
 import { index_styles } from "@/assets/stylesheets/index";
 import { useCurrentResultStore } from "@/services/shared/result";
 import { useContext } from "react";

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
-import { View, Text } from "./Themed";
+import { View, Text } from "../Themed";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { lotto_categories } from "@/constants/Categories";
@@ -61,7 +61,13 @@ export default function InputForm() {
     setShow(true);
   };
 
+  const delete_user_comb_state = () => {
+    clearResult();
+    clearInputCombination();
+  };
+
   const handleSubmitCombination = async (data: LottoDetails) => {
+    delete_user_comb_state();
     await mutateAsync(data);
     setUserInput(data.combination);
   };
@@ -98,8 +104,7 @@ export default function InputForm() {
   }, [result]);
 
   useEffect(() => {
-    clearInputCombination();
-    clearResult();
+    delete_user_comb_state();
   }, [reset]);
 
   return (
@@ -198,8 +203,7 @@ export default function InputForm() {
           onPress={() => {
             reset();
             setDate("Select Date");
-            clearInputCombination();
-            clearResult();
+            delete_user_comb_state();
           }}
         >
           <Text style={index_styles.light_grey_text}>Clear</Text>
