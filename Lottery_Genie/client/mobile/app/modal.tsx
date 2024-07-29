@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Platform, StyleSheet } from 'react-native';
 
-import EditScreenInfo from '@/components/CurrentJackpotPrize';
+import EditScreenInfo from '@/components/index/CurrentJackpotPrize';
 import { Text, View } from '@/components/Themed';
 
 export default function ModalScreen() {

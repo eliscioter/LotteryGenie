@@ -1,7 +1,7 @@
 import { index_styles } from "@/assets/stylesheets/index";
-import CurrentJackpotPrize from "@/components/CurrentJackpotPrize";
-import InputForm from "@/components/InputForm";
-import Result from "@/components/Result";
+import CurrentJackpotPrize from "@/components/index/CurrentJackpotPrize";
+import InputForm from "@/components/index/InputForm";
+import Result from "@/components/index/Result";
 import { Text, View } from "@/components/Themed";
 import { CombCtx } from "@/services/shared/user-comb-ctx";
 import { useMemo, useState } from "react";
