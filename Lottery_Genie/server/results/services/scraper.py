@@ -59,18 +59,9 @@ def save_prizes(result: Prizes):
         print(f"Error: {e}")
 
 
-def scrape_per_game(game):
+def scrape_per_game(soup, game):
     """Scrape the data for each game and return the data"""
     try:
-        url = os.environ.get("WEB_URL")
-
-        user_agent = ua.random
-
-        headers = {"User-Agent": user_agent}
-
-        page = requests.get(url, headers=headers, timeout=5).text
-
-        soup = BeautifulSoup(page, "html.parser")
 
         game_category = soup.find(text=game).find_parent("table").find_all("td")
         date_game = soup.find(text=game).find_parent("table").find_all("th")
@@ -91,6 +82,16 @@ def scrape_pcso():
     """Scrape the data from the lottoPCSO website and save it to the database"""
     print("Scraping...")
 
+    url = os.environ.get("WEB_URL")
+
+    user_agent = ua.random
+
+    headers = {"User-Agent": user_agent}
+
+    page = requests.get(url, headers=headers, timeout=5).text
+
+    soup = BeautifulSoup(page, "html.parser")
+
     lotto_names = [
         "6/58 Ultra Lotto",
         "6/55 Grand Lotto",
@@ -101,7 +102,7 @@ def scrape_pcso():
 
     flag = False
     for lotto_name in lotto_names:
-        combination, game_date, prize, winners = scrape_per_game(lotto_name)
+        combination, game_date, prize, winners = scrape_per_game(soup, lotto_name)
         if not combination or not game_date or not prize or not winners:
             flag = True
             break
@@ -117,9 +118,9 @@ def scrape_pcso():
         save_data(result)
 
     if flag:
+        Results.objects.all().delete()
         return -1
     return 1
-
 
 
 def scrape_summary(category):
@@ -141,32 +142,31 @@ def scrape_summary(category):
 
     soup = BeautifulSoup(page.content, "html.parser")
 
-    table = soup.find("table")
+    table = soup.find("table").find("tbody").find_all("tr")
 
-    data = []
-
-    head_element = table.find("tbody")
-
-    description = head_element.find_all("tr")
-
-    for element in description:
+    for element in table:
         content = element.find_all("td")
+        flag = False
+        if not content:
+            flag = True
+            break
 
-        game_date = content[0].text
-        combination = content[1].text
-        prize = replace_php(content[2].text)
-
-        data.append({"date": game_date, "combination": combination, "prize": prize})
-
-        parsed_date = dateparser.parse(game_date)
+        parsed_date = dateparser.parse(content[0].text)
+        parsed_prize = replace_php(content[2].text)
 
         summary = Summary(
-            category=category, date=parsed_date, combination=combination, prize=prize
+            category=category,
+            date=parsed_date,
+            combination=content[1].text,
+            prize=parsed_prize,
         )
 
         save_summary(summary)
 
-    return {"category": f"6/{category}", "data": data}
+    if flag:
+        Summary.objects.all().delete()
+        return -1
+    return 1
 
 
 def fetch_data():
@@ -198,21 +198,24 @@ def fetch_summary(category):
     if category not in games:
         return {"message": "Invalid category"}
 
-    if not data.count():
-        scrape_summary(category=category)
-
-    if not data.filter(category=category).exists():
-        scrape_summary(category=category)
+    if not data.count() or not data.filter(category=category).exists():
+        res = scrape_summary(category=category)
+        if res == -1:
+            return {"message": "No data"}
 
     return {"data": list(data.filter(category=category).values())}
 
 
 def delete_data():
     """Delete the data from the database"""
-    Results.objects.all().delete()
-    Summary.objects.all().delete()
-    Prizes.objects.all().delete()
-    return {"message": "Deleted"}
+    try:
+        Results.objects.all().delete()
+        Summary.objects.all().delete()
+        Prizes.objects.all().delete()
+        return {"message": "Deleted"}
+    except (ValueError, TypeError) as e:
+        print(f"Error: {e}")
+        return {"message": "Error deleting data"}
 
 
 def scrape_prizes(category):
@@ -220,34 +223,42 @@ def scrape_prizes(category):
     Scrape the prizes for each category using the category parameter
     """
     print("Scraping prizes...")
-    base_url = os.environ.get("WEB_URL")
 
-    url = f"{base_url}/6-{category}-lotto-result"
+    try:
+        base_url = os.environ.get("WEB_URL")
 
-    user_agent = ua.random
+        url = f"{base_url}/6-{category}-lotto-result"
 
-    headers = {"User-Agent": user_agent}
+        user_agent = ua.random
 
-    page = requests.get(url, headers=headers, timeout=5)
+        headers = {"User-Agent": user_agent}
 
-    soup = BeautifulSoup(page.content, "html.parser")
+        page = requests.get(url, headers=headers, timeout=5)
 
-    prizes = soup.find(text="1st Prize").find_parent("table").find_all("td")
+        soup = BeautifulSoup(page.content, "html.parser")
 
-    first_prize = replace_php(prizes[2].text)
-    second_prize = replace_php(prizes[5].text)
-    third_prize = replace_php(prizes[8].text)
-    fourth_prize = replace_php(prizes[11].text)
+        prizes = soup.find(text="1st Prize").find_parent("table").find_all("td")
 
-    prizes_obj = Prizes(
-        category=category,
-        first_prize=first_prize,
-        second_prize=second_prize,
-        third_prize=third_prize,
-        fourth_prize=fourth_prize,
-    )
+        first_prize = replace_php(prizes[2].text)
+        second_prize = replace_php(prizes[5].text)
+        third_prize = replace_php(prizes[8].text)
+        fourth_prize = replace_php(prizes[11].text)
 
-    save_prizes(prizes_obj)
+        prizes_obj = Prizes(
+            category=category,
+            first_prize=first_prize,
+            second_prize=second_prize,
+            third_prize=third_prize,
+            fourth_prize=fourth_prize,
+        )
+
+        save_prizes(prizes_obj)
+
+        return 1
+    except (AttributeError, IndexError) as e:
+        print(f"Error: {e}")
+        Prizes.objects.all().delete()
+        return -1
 
 
 def check_won_prize(category, correct_combination_count):
@@ -260,39 +271,24 @@ def check_won_prize(category, correct_combination_count):
     if category not in games:
         return {"message": "Invalid category"}
 
-    if not data.count():
-        scrape_prizes(category=category)
-
-    if not data.filter(category=category).exists():
-        scrape_prizes(category=category)
-
-    match correct_combination_count:
-        case 6:
-            return (
-                data.filter(category=category)
-                .values("first_prize")
-                .get()["first_prize"]
-            )
-        case 5:
-            return (
-                data.filter(category=category)
-                .values("second_prize")
-                .get()["second_prize"]
-            )
-        case 4:
-            return (
-                data.filter(category=category)
-                .values("third_prize")
-                .get()["third_prize"]
-            )
-        case 3:
-            return (
-                data.filter(category=category)
-                .values("fourth_prize")
-                .get()["fourth_prize"]
-            )
-        case _:
+    if not data.count() or not data.filter(category=category).exists():
+        res = scrape_prizes(category=category)
+        if res == -1:
             return -1
+
+    prize_map = {
+        6: "first_prize",
+        5: "second_prize",
+        4: "third_prize",
+        3: "fourth_prize",
+    }
+
+    prize_won = prize_map.get(correct_combination_count, -1)
+
+    if prize_won != -1:
+        return data.filter(category=category).values(prize_won).get()[prize_won]
+
+    return -1
 
 
 def check_correct_combinations(user_combinations, correct_combinations):
@@ -326,10 +322,11 @@ def check_combinations(combinations, category, draw_date):
     extracted_category = category.split("/")[1].split(" ")[0]
 
     if not data.count():
-        scrape_summary(category=extracted_category)
+        res = scrape_summary(category=extracted_category)
+        if res == -1:
+            return {"message": "No data"}
 
-    parsed_date = datetime.fromisoformat(draw_date)
-    formatted_date = datetime.strftime(parsed_date, "%Y-%m-%d")
+    parsed_date = datetime.fromisoformat(draw_date).strftime("%Y-%m-%d")
 
     if category not in games:
         return {"message": "Invalid category"}
@@ -340,12 +337,12 @@ def check_combinations(combinations, category, draw_date):
     numbers_joined = "-".join([str(num) for num in combinations])
 
     winning_combination = data.filter(
-        category=extracted_category, combination=numbers_joined, date=formatted_date
+        category=extracted_category, combination=numbers_joined, date=parsed_date
     ).values()
 
     if winning_combination.count() == 0:
         right_combination = list(
-            data.filter(category=extracted_category, date=formatted_date).values()
+            data.filter(category=extracted_category, date=parsed_date).values()
         )
 
         numbers_list = reconvert_to_array(right_combination[0]["combination"])
