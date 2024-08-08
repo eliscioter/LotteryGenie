@@ -7,13 +7,16 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { useColorScheme } from "@/components/useColorScheme";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/config/query-client";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
 import Toast from "react-native-toast-message";
+import { View, Text } from "react-native";
+import { SQLiteProvider } from "expo-sqlite";
+import { db_name, loadDatabase } from "@/services/db/lotto-combinations";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -29,6 +32,8 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+
+
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -55,17 +60,50 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   useReactQueryDevTools(queryClient);
+
+  const [init_db, setInitDb] = useState(false);
+
+  useEffect(() => {
+    if (!init_db) {
+      loadDatabase()
+        .then((res) => {
+          if (res) {
+            setInitDb(true);
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading database", error);
+          setInitDb(false);
+        });
+    }
+  }, [init_db]);
+
   return (
     <>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <QueryClientProvider client={queryClient}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-          </Stack>
-        </QueryClientProvider>
-      </ThemeProvider>
-      <Toast />
+      <Suspense
+        fallback={
+          <View>
+            <Text>Loading...</Text>
+          </View>
+        }
+      >
+        <SQLiteProvider databaseName={db_name}>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <QueryClientProvider client={queryClient}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="modal"
+                  options={{ presentation: "modal" }}
+                />
+              </Stack>
+            </QueryClientProvider>
+          </ThemeProvider>
+          <Toast />
+        </SQLiteProvider>
+      </Suspense>
     </>
   );
 }
