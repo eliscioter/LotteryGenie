@@ -3,8 +3,10 @@
         "dateparser",
         "datetimepicker",
         "dotenv",
+        "hookform",
         "pcso",
+        "tanstack",
         "useragent",
-        "hookform"
+        "zustand"
     ]
 }
