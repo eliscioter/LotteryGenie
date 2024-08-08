@@ -106,6 +106,9 @@ def scrape_pcso():
         if not combination or not game_date or not prize or not winners:
             flag = True
             break
+        if "/49" in lotto_name:
+            lotto_name = "6/49 Super Lotto"
+
         result = Results(
             date=parsed_date_or_none(game_date),
             category=lotto_name,
