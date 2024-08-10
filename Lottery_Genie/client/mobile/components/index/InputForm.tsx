@@ -14,6 +14,8 @@ import { InputSchema } from "@/validators/current-results";
 import { useCurrentResultStore } from "@/services/shared/result";
 import { CombCtx } from "@/services/shared/user-comb-ctx";
 import Colors from "@/constants/Colors";
+import { useSQLiteContext } from "expo-sqlite";
+import { addHistory } from "@/services/db/lotto-combinations";
 
 export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
@@ -47,6 +49,8 @@ export default function InputForm() {
 
   const comb_input_ref = useRef<TextInput[]>([]);
 
+  const db = useSQLiteContext();
+
   const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
       setShow(false);
@@ -66,10 +70,28 @@ export default function InputForm() {
     clearInputCombination();
   };
 
+  const truncateDate = (date: string) => {
+    const index_to_truncate = date.indexOf("GMT") - 1;
+
+    if (index_to_truncate === -1) {
+      return date;
+    }
+
+    return date.substring(0, index_to_truncate);
+  };
+
   const handleSubmitCombination = async (data: LottoDetails) => {
     delete_user_comb_state();
     await mutateAsync(data);
     setUserInput(data.combination);
+
+    const truncated_date = truncateDate(date.toString());
+    await addHistory(
+      db,
+      data.category,
+      data.combination.join("-"),
+      truncated_date
+    );
   };
 
   const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
