@@ -5,6 +5,7 @@
         "dotenv",
         "hookform",
         "pcso",
+        "Pressable",
         "tanstack",
         "useragent",
         "zustand"
