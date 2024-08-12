@@ -14,4 +14,5 @@ export type LottoCombination = {
     category: string;
     combination: string;
     input_date: string;
+    created_at: Date;
 };
