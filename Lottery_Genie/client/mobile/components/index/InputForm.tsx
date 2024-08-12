@@ -16,6 +16,7 @@ import { CombCtx } from "@/services/shared/user-comb-ctx";
 import Colors from "@/constants/Colors";
 import { useSQLiteContext } from "expo-sqlite";
 import { addHistory } from "@/services/db/lotto-combinations";
+import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 
 export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
@@ -51,6 +52,8 @@ export default function InputForm() {
 
   const db = useSQLiteContext();
 
+  const { setUpdateHistoryDetails } = useContext(UpdateHistoryDetailsCtx);
+
   const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
       setShow(false);
@@ -71,7 +74,10 @@ export default function InputForm() {
   };
 
   const truncateDate = (date: string) => {
-    const index_to_truncate = date.indexOf("GMT") - 1;
+    const index_of_hours = 2;
+    const last_index_to_truncate = 1;
+    const index_to_truncate =
+      date.indexOf(":") - index_of_hours - last_index_to_truncate;
 
     if (index_to_truncate === -1) {
       return date;
@@ -81,17 +87,24 @@ export default function InputForm() {
   };
 
   const handleSubmitCombination = async (data: LottoDetails) => {
-    delete_user_comb_state();
-    await mutateAsync(data);
-    setUserInput(data.combination);
+    try {
+      delete_user_comb_state();
+      await mutateAsync(data);
+      setUserInput(data.combination);
 
-    const truncated_date = truncateDate(date.toString());
-    await addHistory(
-      db,
-      data.category,
-      data.combination.join("-"),
-      truncated_date
-    );
+      const truncated_date = truncateDate(date.toString()).trim();
+
+      await addHistory(
+        db,
+        data.category,
+        data.combination.join("-"),
+        truncated_date
+      );
+
+      setUpdateHistoryDetails(true);
+    } catch (error) {
+      console.error("Error submitting data", error);
+    }
   };
 
   const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
