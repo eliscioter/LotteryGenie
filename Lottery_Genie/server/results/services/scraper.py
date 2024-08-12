@@ -323,6 +323,13 @@ def check_combinations(combinations, category, draw_date):
     data = Summary.objects
 
     extracted_category = category.split("/")[1].split(" ")[0]
+    if category not in games:
+        return {"message": "Invalid category"}
+
+    if not data.filter(category=extracted_category).exists():
+        res = scrape_summary(category=extracted_category)
+        if res == -1:
+            return {"message": "No data"}
 
     if not data.count():
         res = scrape_summary(category=extracted_category)
@@ -330,12 +337,6 @@ def check_combinations(combinations, category, draw_date):
             return {"message": "No data"}
 
     parsed_date = datetime.fromisoformat(draw_date).strftime("%Y-%m-%d")
-
-    if category not in games:
-        return {"message": "Invalid category"}
-
-    if not data.filter(category=extracted_category).exists():
-        return {"message": "No data"}
 
     numbers_joined = "-".join([str(num) for num in combinations])
 
