@@ -17,6 +17,7 @@ import Toast from "react-native-toast-message";
 import { View, Text } from "react-native";
 import { SQLiteProvider } from "expo-sqlite";
 import { db_name, loadDatabase } from "@/services/db/lotto-combinations";
+import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -32,8 +33,6 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-
-
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -62,6 +61,8 @@ function RootLayoutNav() {
   useReactQueryDevTools(queryClient);
 
   const [init_db, setInitDb] = useState(false);
+
+  const [update_history_details, setUpdateHistoryDetails] = useState(false);
 
   useEffect(() => {
     if (!init_db) {
@@ -92,13 +93,20 @@ function RootLayoutNav() {
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
             <QueryClientProvider client={queryClient}>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="modal"
-                  options={{ presentation: "modal" }}
-                />
-              </Stack>
+              <UpdateHistoryDetailsCtx.Provider
+                value={{ update_history_details, setUpdateHistoryDetails }}
+              >
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="modal"
+                    options={{ presentation: "modal" }}
+                  />
+                </Stack>
+              </UpdateHistoryDetailsCtx.Provider>
             </QueryClientProvider>
           </ThemeProvider>
           <Toast />
