@@ -18,6 +18,7 @@ import { View, Text } from "react-native";
 import { SQLiteProvider } from "expo-sqlite";
 import { db_name, loadDatabase } from "@/services/db/lotto-combinations";
 import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -96,16 +97,18 @@ function RootLayoutNav() {
               <UpdateHistoryDetailsCtx.Provider
                 value={{ update_history_details, setUpdateHistoryDetails }}
               >
-                <Stack>
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="modal"
-                    options={{ presentation: "modal" }}
-                  />
-                </Stack>
+                <GestureHandlerRootView>
+                  <Stack>
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="modal"
+                      options={{ presentation: "modal" }}
+                    />
+                  </Stack>
+                </GestureHandlerRootView>
               </UpdateHistoryDetailsCtx.Provider>
             </QueryClientProvider>
           </ThemeProvider>
