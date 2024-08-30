@@ -62,6 +62,20 @@ export default function TabLayout() {
         options={{
           title: "History",
           tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
+          headerRight: () => (
+            <Link href="/modal" asChild>
+              <Pressable>
+                {({ pressed }) => (
+                  <FontAwesome
+                    name="trash"
+                    size={25}
+                    color={Colors.white}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </Link>
+          ),
         }}
       />
     </Tabs>
