@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Tabs } from "expo-router";
 import { Pressable, Text } from "react-native";
@@ -6,7 +6,7 @@ import { Pressable, Text } from "react-native";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
-import { set } from "zod";
+import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -25,6 +25,10 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   const [is_pressed, setIsPressed] = useState(false);
+
+  const { update_history_details } = useContext(UpdateHistoryDetailsCtx);
+
+  const [history_tab_pressed, setHistoryTabPressed] = useState(false);
 
   return (
     <SelectCtx.Provider value={{ is_pressed, setIsPressed }}>
@@ -68,30 +72,38 @@ export default function TabLayout() {
         />
         <Tabs.Screen
           name="history"
+          listeners={{
+            tabPress: () => {
+              setHistoryTabPressed(!history_tab_pressed);
+            },
+          }}
           options={{
             title: "History",
             tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
             headerRight: () => {
-              return is_pressed ? (
-                <Pressable
-                  onPress={() => {
-                    setIsPressed(false);
-                  }}
-                >
-                  <Text style={{ color: "white", marginRight: 15 }}>
-                    Cancel
-                  </Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => {
-                    setIsPressed(true);
-                  }}
-                >
-                  <Text style={{ color: "white", marginRight: 15 }}>
-                    Select
-                  </Text>
-                </Pressable>
+              return (
+                update_history_details.length > 0 &&
+                (is_pressed ? (
+                  <Pressable
+                    onPress={() => {
+                      setIsPressed(false);
+                    }}
+                  >
+                    <Text style={{ color: "white", marginRight: 15 }}>
+                      Cancel
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    onPress={() => {
+                      setIsPressed(true);
+                    }}
+                  >
+                    <Text style={{ color: "white", marginRight: 15 }}>
+                      Select
+                    </Text>
+                  </Pressable>
+                ))
               );
             },
           }}
