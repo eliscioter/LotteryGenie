@@ -321,6 +321,8 @@ def check_combinations(combinations, category, draw_date):
         "6/58 Ultra Lotto": "6/58 Ultra Lotto",
     }
     data = Summary.objects
+    
+    parsed_date = datetime.fromisoformat(draw_date).strftime("%Y-%m-%d")
 
     extracted_category = category.split("/")[1].split(" ")[0]
     if category not in games:
@@ -330,25 +332,29 @@ def check_combinations(combinations, category, draw_date):
         res = scrape_summary(category=extracted_category)
         if res == -1:
             return {"message": "No data"}
+    
+    if not data.filter(date=parsed_date).exists():
+        res = scrape_summary(category=extracted_category)
+        if res == -1:
+            return {"message": "No data"}
 
     if not data.count():
         res = scrape_summary(category=extracted_category)
         if res == -1:
             return {"message": "No data"}
-
-    parsed_date = datetime.fromisoformat(draw_date).strftime("%Y-%m-%d")
+        
 
     numbers_joined = "-".join([str(num) for num in combinations])
-
+    
     winning_combination = data.filter(
         category=extracted_category, combination=numbers_joined, date=parsed_date
     ).values()
-
+    
     if winning_combination.count() == 0:
         right_combination = list(
             data.filter(category=extracted_category, date=parsed_date).values()
         )
-
+        
         numbers_list = reconvert_to_array(right_combination[0]["combination"])
 
         compared_combinations = check_correct_combinations(combinations, numbers_list)
