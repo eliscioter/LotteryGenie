@@ -20,6 +20,7 @@ import { db_name, loadDatabase } from "@/services/db/lotto-combinations";
 import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
+import { LottoCombination } from "@/types/results-type";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -64,7 +65,7 @@ function RootLayoutNav() {
 
   const [init_db, setInitDb] = useState(false);
 
-  const [update_history_details, setUpdateHistoryDetails] = useState(false);
+  const [update_history_details, setUpdateHistoryDetails] = useState<LottoCombination[]>([]);
 
   useEffect(() => {
     if (!init_db) {
