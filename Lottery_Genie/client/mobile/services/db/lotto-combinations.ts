@@ -3,7 +3,7 @@ import { openDatabaseAsync, SQLiteDatabase } from "expo-sqlite";
 
 export const db_name = "lottery_genie.db";
 
-const db_table = "lotto_combinations";
+export const db_table = "lotto_combinations";
 
 export const loadDatabase = async () => {
   try {
