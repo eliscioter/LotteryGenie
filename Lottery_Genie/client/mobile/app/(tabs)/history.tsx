@@ -71,12 +71,24 @@ export default function HistoryScreen() {
       setHistory((prev) => {
         return prev.filter((x) => x !== item);
       });
+
+      setSelected((prev) => {
+        return prev.filter((x) => x !== item);
+      });
     } catch (error) {
       console.error("Error deleting from state", error);
     }
   }
+
   return (
     <SafeAreaView style={index_styles.container}>
+      {
+        history.length === 0 && (
+          <View style={{backgroundColor: "transparent"}}>
+            <Text style={{textAlign: "center", color: "white"}}>No history</Text>
+          </View>
+        )
+      }
       {is_pressed && (
         <View
           style={{
@@ -88,36 +100,43 @@ export default function HistoryScreen() {
             paddingBottom: 10,
           }}
         >
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: "transparent",
-            }}
-          >
-            <Checkbox
-              status={is_selected_all ? "checked" : "unchecked"}
-              onPress={() => {
-                console.log("pressing");
-                setIsSelectedAll(!is_selected_all);
-              }}
-              uncheckedColor="white"
-              color="white"
-            />
-            <Text style={{ color: "white", marginLeft: 5 }}>Select All</Text>
-          </View>
-          {selected.length > 0 && (
-            <FontAwesome
-              name="trash"
-              color={"white"}
-              size={25}
-              onPress={() => {
-                setModalVisibility(true);
-              }}
-              style={{ paddingRight: 10 }}
-            />
-          )}
+          <>
+            {history.length > 0 && (
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <Checkbox
+                  status={is_selected_all ? "checked" : "unchecked"}
+                  onPress={() => {
+                    console.log("pressing");
+                    setIsSelectedAll(!is_selected_all);
+                  }}
+                  uncheckedColor="white"
+                  color="white"
+                />
+                <Text style={{ color: "white", marginLeft: 5 }}>
+                  Select All
+                </Text>
+              </View>
+            )}
+
+            {selected.length > 0 && (
+              <FontAwesome
+                name="trash"
+                color={"white"}
+                size={25}
+                onPress={() => {
+                  setModalVisibility(true);
+                }}
+                style={{ paddingRight: 10 }}
+              />
+            )}
+          </>
         </View>
       )}
       <Portal>
