@@ -84,8 +84,10 @@ export const index_styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-evenly",
+    alignItems: "center",
     backgroundColor: Colors.light_blue_green,
     paddingBottom: 10,
+    width: "100%",
   },
   input_text_button: {
     height: 40,
