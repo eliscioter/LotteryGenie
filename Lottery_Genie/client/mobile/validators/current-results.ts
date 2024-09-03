@@ -16,6 +16,12 @@ export const lotteryResultSchema = z.object({
 export const InputSchema = z.object({
   category: z.string(),
   date: z.date(),
-  combination: z.array(z.string().min(1).max(2)),
+  combination: z.array(
+    z.object({
+      value: z.string().min(1).max(2),
+    })
+  )
+    .nonempty("At least one combination is required")
+    .min(1, "At least one combination is required"),
   prize: z.string().optional(),
 });
