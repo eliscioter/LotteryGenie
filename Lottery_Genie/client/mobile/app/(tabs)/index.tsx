@@ -4,27 +4,22 @@ import InputForm from "@/components/index/InputForm";
 import Result from "@/components/index/Result";
 import { Text, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
-import { CombCtx } from "@/services/shared/user-comb-ctx";
+import { CombCtx, CombCtxType } from "@/services/shared/user-comb-ctx";
 import { useMemo, useState } from "react";
 import { SafeAreaView } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 export default function TabOneScreen() {
-  const [input_combination, setInputCombination] = useState<string[]>([
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
+  const [input_combination, setInputCombination] = useState<{value: string}[]>([
+    { value: "" },
   ]);
 
-  const update_input_comb = useMemo(
+  const update_input_comb: CombCtxType = useMemo(
     () => ({
       input_combination,
       setInputCombination,
       clearInputCombination: () =>
-        setInputCombination(["", "", "", "", "", ""]),
+        setInputCombination([{ value: "" }]),
     }),
     [input_combination]
   );
