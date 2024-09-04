@@ -1,11 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  SafeAreaView,
-  TextInput,
-  TouchableOpacity,
-} from "react-native";
+import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "../Themed";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -37,12 +31,12 @@ export default function InputForm() {
   const { control, handleSubmit, reset } = useForm<LottoDetails>({
     resolver: zodResolver(InputSchema),
     defaultValues: {
-      combination: [{value: ""}, {value: ""}, {value: ""}, {value: ""}, {value: ""}, {value: ""}],
-    }
+      category: "",
+      date: new Date(),
+      combination: [{ value: Array(6).fill("") }],
+    },
   });
-  // TODO: Form is not working anymore, need to fix this
-  // ! Something that useFieldArray did that broke the form
-  // * Check the zod schema for possible errors
+
   const { fields, remove, append } = useFieldArray({
     control,
     name: "combination",
@@ -55,16 +49,11 @@ export default function InputForm() {
     isError,
   } = useCheckCombinationMutation();
 
-  const inputs = ["", "", "", "", "", ""];
-
-  const [user_input, setUserInput] = useState<{ value: string}[]>([
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-  ]);
+  const [user_input, setUserInput] = useState<
+    Pick<LottoDetails, "combination">
+  >({
+    combination: [{ value: Array(6).fill("") }],
+  });
 
   const { setResult, clearResult } = useCurrentResultStore();
 
@@ -110,10 +99,9 @@ export default function InputForm() {
 
   const handleSubmitCombination = async (data: LottoDetails) => {
     try {
+      console.log(data, "DATA");
       delete_user_comb_state();
       await mutateAsync(data);
-      setUserInput(data.combination);
-
       const truncated_date = truncateDate(date.toString()).trim();
 
       await addHistory(
@@ -122,7 +110,7 @@ export default function InputForm() {
         data.combination.join("-"),
         truncated_date
       );
-
+      // setUserInput(data.combination);
       setUpdateHistoryDetails([]);
     } catch (error) {
       console.error("Error submitting data", error);
@@ -141,7 +129,8 @@ export default function InputForm() {
   };
 
   const changeInputFocus = (index: number, text: string) => {
-    if (text.length === 2 && index < inputs.length - 1) {
+    const input_length = 5;
+    if (text.length === 2 && index < input_length) {
       comb_input_ref.current[index + 1]?.focus();
     }
 
@@ -149,15 +138,17 @@ export default function InputForm() {
       comb_input_ref.current[index]?.focus();
     }
 
-    if (text.length === 2 && index === inputs.length - 1) {
+    if (text.length === 2 && index === input_length) {
       comb_input_ref.current[index]?.blur();
     }
   };
 
+  // TODO: Refactor results for new response from the server
   useEffect(() => {
+    console.log(result, "RESULT");
     if (result) {
       setResult(result);
-      setInputCombination(user_input);
+      // setInputCombination(user_input);
     }
   }, [result]);
 
@@ -228,62 +219,36 @@ export default function InputForm() {
       <View style={{ display: "flex", backgroundColor: "transparent" }}>
         <TouchableOpacity
           onPress={() => {
-            append({
-              value: "",
-            });
+            append({ value: Array(6).fill("") });
           }}
         >
           <FontAwesome name="plus-circle" size={18} color="white" />
         </TouchableOpacity>
-        <View style={index_styles.combinations_container}>
-          {inputs.map((_, index) => (
-            <Controller
-              key={`combination.${index}`}
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => {
-                    if (ref) {
-                      comb_input_ref.current[index] = ref;
-                    }
-                  }}
-                  onChangeText={(text) => {
-                    onChange(text);
-                    changeInputFocus(index, text);
-                  }}
-                  value={`${value ?? ""}`}
-                  placeholder="0"
-                  placeholderTextColor="white"
-                  selectionColor={"white"}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  style={index_styles.input_text}
-                />
-              )}
-              name={`combination.${index}`}
-            />
-          ))}
-        </View>
         {fields.map((field, index_arr) => (
-          <View style={{...index_styles.combinations_container, paddingLeft: 8}} key={field.id}>
-            {inputs.map((_, index) => (
+          <View
+            style={{ ...index_styles.combinations_container, paddingLeft: 8 }}
+            key={field.id}
+          >
+            {Array.from({ length: 6 }).map((_, inputIndex) => (
               <Controller
-                key={`combination.${index}`}
+                key={inputIndex}
                 control={control}
-                render={({ field: { onChange, value } }) => (
+                name={`combination.${index_arr}.value.${inputIndex}`}
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    key={index}
+                    key={inputIndex}
                     ref={(ref) => {
                       if (ref) {
-                        comb_input_ref.current[index] = ref;
+                        comb_input_ref.current[inputIndex] = ref;
                       }
                     }}
                     onChangeText={(text) => {
+                      console.log(text, "TEXT");
                       onChange(text);
-                      changeInputFocus(index, text);
+                      changeInputFocus(inputIndex, text);
                     }}
-                    value={`${value ?? ""}`}
+                    onBlur={onBlur}
+                    value={value}
                     placeholder="0"
                     placeholderTextColor="white"
                     selectionColor={"white"}
@@ -292,16 +257,17 @@ export default function InputForm() {
                     style={index_styles.input_text}
                   />
                 )}
-                name={`combination.${index}`}
               />
             ))}
-            <TouchableOpacity
-              onPress={() => {
-                remove(index_arr);
-              }}
-            >
-              <FontAwesome name="minus-circle" size={18} color="white" />
-            </TouchableOpacity>
+            {index_arr > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  remove(index_arr);
+                }}
+              >
+                <FontAwesome name="minus-circle" size={18} color="white" />
+              </TouchableOpacity>
+            )}
           </View>
         ))}
       </View>
