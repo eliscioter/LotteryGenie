@@ -26,7 +26,7 @@ export default function Result() {
 
   return (
     <View style={index_styles.result_container}>
-      {input_combination[0] && (
+      {input_combination[0].value && (
         <>
           <Text style={{ color: Colors.light_grey, textAlign: "center" }}>
             You got {result?.result.count} out of 6
@@ -39,7 +39,7 @@ export default function Result() {
               <View
                 key={index}
                 style={
-                  input_combination.some((inputNum) => inputNum === num)
+                  input_combination.some((inputNum) => inputNum.value === num)
                     ? index_styles.correct_number_container
                     : index_styles.incorrect_number_container
                 }
