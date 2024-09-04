@@ -344,55 +344,57 @@ def check_combinations(combinations, category, draw_date):
             return {"message": "No data"}
         
 
-    numbers_joined = "-".join([str(num) for num in combinations])
+    numbers_joined = ["-".join(item['value']) for item in combinations]
     
-    winning_combination = data.filter(
-        category=extracted_category, combination=numbers_joined, date=parsed_date
-    ).values()
-    
-    if winning_combination.count() == 0:
-        right_combination = list(
-            data.filter(category=extracted_category, date=parsed_date).values()
-        )
+    # TODO: Return results per value in numbers_joined
+    for value in numbers_joined:
+        winning_combination = data.filter(
+            category=extracted_category, combination=value, date=parsed_date
+        ).values()
         
-        numbers_list = reconvert_to_array(right_combination[0]["combination"])
+        if winning_combination.count() == 0:
+            right_combination = list(
+                data.filter(category=extracted_category, date=parsed_date).values()
+            )
+            
+            numbers_list = reconvert_to_array(right_combination[0]["combination"])
 
-        compared_combinations = check_correct_combinations(combinations, numbers_list)
+            compared_combinations = check_correct_combinations(combinations, numbers_list)
 
-        prize_amount = check_won_prize(
-            extracted_category, compared_combinations["count"]
-        )
+            prize_amount = check_won_prize(
+                extracted_category, compared_combinations["count"]
+            )
 
-        return {
-            "category": right_combination[0]["category"],
-            "date": right_combination[0]["date"],
-            "combination": numbers_list,
-            "prize": right_combination[0]["prize"],
-            "result": compared_combinations,
-            "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
-        }
+            return {
+                "category": right_combination[0]["category"],
+                "date": right_combination[0]["date"],
+                "combination": numbers_list,
+                "prize": right_combination[0]["prize"],
+                "result": compared_combinations,
+                "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
+            }
 
-    if winning_combination.count() == 1:
+        if winning_combination.count() == 1:
 
-        winning_combination_list = reconvert_to_array(
-            winning_combination[0]["combination"]
-        )
+            winning_combination_list = reconvert_to_array(
+                winning_combination[0]["combination"]
+            )
 
-        compared_combinations = check_correct_combinations(
-            combinations, winning_combination_list
-        )
+            compared_combinations = check_correct_combinations(
+                combinations, winning_combination_list
+            )
 
-        prize_amount = check_won_prize(
-            extracted_category, compared_combinations["count"]
-        )
+            prize_amount = check_won_prize(
+                extracted_category, compared_combinations["count"]
+            )
 
-        return {
-            "category": winning_combination[0]["category"],
-            "date": winning_combination[0]["date"],
-            "combination": winning_combination_list,
-            "prize": winning_combination[0]["prize"],
-            "result": compared_combinations,
-            "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
-        }
+            return {
+                "category": winning_combination[0]["category"],
+                "date": winning_combination[0]["date"],
+                "combination": winning_combination_list,
+                "prize": winning_combination[0]["prize"],
+                "result": compared_combinations,
+                "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
+            }
 
     return {"message": "Error"}
