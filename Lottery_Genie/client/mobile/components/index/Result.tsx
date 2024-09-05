@@ -7,10 +7,11 @@ import { CombCtx } from "@/services/shared/user-comb-ctx";
 
 export default function Result() {
   const { result } = useCurrentResultStore();
-  const {input_combination} = useContext(CombCtx);
+  const { input_combination } = useContext(CombCtx);
 
+  // TODO: Transfer this function to the server side
   const responseMessage = () => {
-    switch (result?.result.count) {
+    switch (result?.data?.result.count) {
       case 6:
         return "Congratulations, You won the 1st prize!";
       case 5:
@@ -48,6 +49,7 @@ export default function Result() {
               </View>
             ))}
           </View>
+          // TODO: Transfer this to the server side
           {result?.result && result?.result.count >= 3 && (
             <Text style={index_styles.prize_won_text}>
               You won {result?.prize_amount}
