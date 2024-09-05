@@ -1,9 +1,9 @@
-import { ResultType } from "@/types/results-type";
+import { ResultsType } from "@/types/results-type";
 import { create } from "zustand";
 
 interface ResultStore {
-    result: Nullable<ResultType>;
-    setResult: (result: ResultType) => void;
+    result: Nullable<ResultsType>;
+    setResult: (result: ResultsType) => void;
     clearResult: () => void;
 }
 

@@ -23,7 +23,7 @@ export const useCurrentResults = () =>
 
 export const useCheckCombinationMutation = () =>
   useMutation<
-    ResultType & RequestError,
+    ResultsType & RequestError,
     AxiosError,
     LottoDetails
   >({
