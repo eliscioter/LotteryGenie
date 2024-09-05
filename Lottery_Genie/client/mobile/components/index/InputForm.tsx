@@ -49,11 +49,7 @@ export default function InputForm() {
     isError,
   } = useCheckCombinationMutation();
 
-  const [user_input, setUserInput] = useState<
-    Pick<LottoDetails, "combination">
-  >({
-    combination: [{ value: Array(6).fill("") }],
-  });
+  const [user_input, setUserInput] = useState<string[][]>([Array(6).fill("")]);
 
   const { setResult, clearResult } = useCurrentResultStore();
 
@@ -110,7 +106,11 @@ export default function InputForm() {
         data.combination.join("-"),
         truncated_date
       );
-      // setUserInput(data.combination);
+      // TODO: update user_input state after submitting data
+      data.combination.forEach((item) => {
+        setUserInput([...user_input, item.value]);
+      });
+
       setUpdateHistoryDetails([]);
     } catch (error) {
       console.error("Error submitting data", error);
@@ -145,10 +145,11 @@ export default function InputForm() {
 
   // TODO: Refactor results for new response from the server
   useEffect(() => {
-    console.log(result, "RESULT");
     if (result) {
       setResult(result);
-      // setInputCombination(user_input);
+      // TODO: Set combination context after submitting data
+      // * I think user_input state is not needed anymore
+      // setInputCombination(user_input.combination);
     }
   }, [result]);
 
@@ -243,7 +244,6 @@ export default function InputForm() {
                       }
                     }}
                     onChangeText={(text) => {
-                      console.log(text, "TEXT");
                       onChange(text);
                       changeInputFocus(inputIndex, text);
                     }}
