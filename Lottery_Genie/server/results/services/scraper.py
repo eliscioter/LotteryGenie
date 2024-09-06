@@ -278,7 +278,7 @@ def check_won_prize(category, correct_combination_count):
     if not data.count() or not data.filter(category=category).exists():
         res = scrape_prizes(category=category)
         if res == -1:
-            return -1
+            return {"message": "No data"}
 
     prize_map = {
         6: "first_prize",
@@ -286,14 +286,23 @@ def check_won_prize(category, correct_combination_count):
         4: "third_prize",
         3: "fourth_prize",
     }
+    
+    message_map = {
+        6: "Congratulations! You won the first prize!",
+        5: "Congratulations! You won the second prize!",
+        4: "Congratulations! You won the third prize!",
+        3: "Congratulations! You won the fourth prize!",
+        -1: "Sorry, you didn't win any prize",
+    }
 
     prize_won = prize_map.get(correct_combination_count, -1)
-
+    
+    prize_message = message_map.get(correct_combination_count, "Sorry, you didn't win any prize")
+    
     if prize_won != -1:
-        return data.filter(category=category).values(prize_won).get()[prize_won]
-
-    return -1
-
+        return {"amount": data.filter(category=category).values(prize_won).get()[prize_won], "message": prize_message}
+    else:
+        return {"amount": 0,"message": "Sorry, you didn't win any prize"}
 
 def check_correct_combinations(user_combinations, correct_combinations):
     """
@@ -304,7 +313,7 @@ def check_correct_combinations(user_combinations, correct_combinations):
         num for num in user_combinations if num in correct_combinations
     ]
 
-    return {"numbers": numbers_got_right, "count": len(numbers_got_right)}
+    return {"user_combination": user_combinations, "numbers": numbers_got_right, "count": len(numbers_got_right)}
 
 
 def reconvert_to_array(combination):
@@ -368,6 +377,8 @@ def check_combinations(combinations, category, draw_date):
                 prize_amount = check_won_prize(
                     extracted_category, compared_combinations["count"]
                 )
+                
+                print(f"{prize_amount} !@#@!#@!#")
 
                 results_arr.append({
                     "category": right_combination[0]["category"],
@@ -375,7 +386,7 @@ def check_combinations(combinations, category, draw_date):
                     "combination": numbers_list,
                     "prize": right_combination[0]["prize"],
                     "result": compared_combinations,
-                    "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
+                    "prize_amount":prize_amount
                 })
 
             if winning_combination.count() >= 1:
@@ -394,6 +405,8 @@ def check_combinations(combinations, category, draw_date):
                 prize_amount = check_won_prize(
                     extracted_category, compared_combinations["count"]
                 )
+                
+                print(f"{prize_amount} asdasdasdas")
 
                 results_arr.append({
                     "category": winning_combination[0]["category"],
@@ -401,12 +414,13 @@ def check_combinations(combinations, category, draw_date):
                     "combination": winning_combination_list,
                     "prize": winning_combination[0]["prize"],
                     "result": compared_combinations,
-                    "prize_amount": prize_amount if prize_amount != -1 else "No Prize",
+                    "prize_amount": prize_amount
+
                 })
                 
         if(len(results_arr) == 0):
             return {"data": "No data"}
-
+        print(f"{results_arr} 345345435")
         return {"data": results_arr}
     except:
         return {"data": "Error checking combinations"}
