@@ -378,8 +378,6 @@ def check_combinations(combinations, category, draw_date):
                     extracted_category, compared_combinations["count"]
                 )
                 
-                print(f"{prize_amount} !@#@!#@!#")
-
                 results_arr.append({
                     "category": right_combination[0]["category"],
                     "date": right_combination[0]["date"],
@@ -406,8 +404,6 @@ def check_combinations(combinations, category, draw_date):
                     extracted_category, compared_combinations["count"]
                 )
                 
-                print(f"{prize_amount} asdasdasdas")
-
                 results_arr.append({
                     "category": winning_combination[0]["category"],
                     "date": winning_combination[0]["date"],
@@ -420,7 +416,7 @@ def check_combinations(combinations, category, draw_date):
                 
         if(len(results_arr) == 0):
             return {"data": "No data"}
-        print(f"{results_arr} 345345435")
         return {"data": results_arr}
-    except:
+    except (ValueError, TypeError) as e:
+        print(f"Error: {e}")
         return {"data": "Error checking combinations"}
