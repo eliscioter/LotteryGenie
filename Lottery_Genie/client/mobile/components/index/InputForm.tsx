@@ -17,7 +17,6 @@ import { useCheckCombinationMutation } from "@/services/apis/current-results";
 import { LottoDetails } from "@/types/results-type";
 import { InputSchema } from "@/validators/current-results";
 import { useCurrentResultStore } from "@/services/shared/result";
-import { CombCtx } from "@/services/shared/user-comb-ctx";
 import Colors from "@/constants/Colors";
 import { useSQLiteContext } from "expo-sqlite";
 import { addHistory } from "@/services/db/lotto-combinations";
@@ -49,11 +48,7 @@ export default function InputForm() {
     isError,
   } = useCheckCombinationMutation();
 
-  const [user_input, setUserInput] = useState<string[][]>([Array(6).fill("")]);
-
   const { setResult, clearResult } = useCurrentResultStore();
-
-  const { setInputCombination, clearInputCombination } = useContext(CombCtx);
 
   const comb_input_ref = useRef<TextInput[]>([]);
 
@@ -77,7 +72,6 @@ export default function InputForm() {
 
   const delete_user_comb_state = () => {
     clearResult();
-    clearInputCombination();
   };
 
   const truncateDate = (date: string) => {
@@ -95,7 +89,6 @@ export default function InputForm() {
 
   const handleSubmitCombination = async (data: LottoDetails) => {
     try {
-      console.log(data, "DATA");
       delete_user_comb_state();
       await mutateAsync(data);
       const truncated_date = truncateDate(date.toString()).trim();
@@ -106,19 +99,15 @@ export default function InputForm() {
         data.combination.join("-"),
         truncated_date
       );
-      // TODO: update user_input state after submitting data
-      data.combination.forEach((item) => {
-        setUserInput([...user_input, item.value]);
-      });
 
       setUpdateHistoryDetails([]);
+
     } catch (error) {
       console.error("Error submitting data", error);
     }
   };
 
   const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
-    console.error(errors.combination, " !@#$!@$#$%%$&^%&^");
     Toast.show({
       type: "error",
       text1: "Error",
@@ -143,13 +132,9 @@ export default function InputForm() {
     }
   };
 
-  // TODO: Refactor results for new response from the server
   useEffect(() => {
     if (result) {
       setResult(result);
-      // TODO: Set combination context after submitting data
-      // * I think user_input state is not needed anymore
-      // setInputCombination(user_input.combination);
     }
   }, [result]);
 
