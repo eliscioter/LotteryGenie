@@ -13,7 +13,7 @@ export const loadDatabase = async () => {
       `CREATE TABLE IF NOT EXISTS ${db_table} (
         id INTEGER PRIMARY KEY, 
         category TEXT, 
-        combination TEXT, 
+        combination JSON, 
         input_date TEXT, 
         created_at TEXT
         )`
@@ -29,14 +29,14 @@ export const loadDatabase = async () => {
 export const addHistory = async (
   db: SQLiteDatabase,
   category: string,
-  combination: string,
+  combination: string[],
   input_date: string
 ) => {
   try {
-
+    const combination_string = JSON.stringify(combination);
     await db.runAsync(
       `INSERT INTO ${db_table} (category, combination, input_date, created_at) VALUES (?, ?, ?, ?)`,
-      [category, combination, input_date, new Date().toISOString()]
+      [category, combination_string, input_date, new Date().toISOString()]
     );
 
     return true;
