@@ -6,6 +6,7 @@
         "hookform",
         "pcso",
         "Pressable",
+        "Swipeable",
         "tanstack",
         "useragent",
         "zustand"
