@@ -261,7 +261,7 @@ export default function HistoryScreen() {
                   Game: {item.category}
                 </Text>
                 <Text style={history_styles.item_text_color}>
-                  Combination: {item.combination}
+                  Combination: {item.combination.replace(/[\[\]"]/g, '').replace(/,\s*/g, ', ')}
                 </Text>
                 <Text style={history_styles.item_text_color}>
                   Picked Date: {item.input_date}
