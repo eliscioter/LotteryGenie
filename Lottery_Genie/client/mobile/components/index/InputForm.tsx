@@ -93,10 +93,12 @@ export default function InputForm() {
       await mutateAsync(data);
       const truncated_date = truncateDate(date.toString()).trim();
 
+      const combined_combination = data.combination.map((item) => item.value).map((value) => value.join("-"));
+
       await addHistory(
         db,
         data.category,
-        data.combination.join("-"),
+        combined_combination,
         truncated_date
       );
 
