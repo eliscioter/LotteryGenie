@@ -1,5 +1,5 @@
 # LotteryGenie
-An application for checking betted lottery numbers
+An application for checking betted lottery numbers using Django and React Native
 
 ## Getting Started
 These instructions will help you open the virtual environment to run the Django server in Windows.
@@ -9,15 +9,8 @@ These instructions will help you open the virtual environment to run the Django 
 2. Activate the virtual environment using this command:
 
     ```
-    LottoGenie\Scripts\activate.bat
+    server\scripts\activate.bat
     ```
-
-3. Go to the server folder
-
-    ```
-    cd lottery_genie/server
-    ```
-
 4. Run the server
 
     ```
