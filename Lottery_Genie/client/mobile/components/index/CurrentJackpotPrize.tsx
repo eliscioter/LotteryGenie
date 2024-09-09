@@ -8,6 +8,14 @@ import Colors from "@/constants/Colors";
 export default function CurrentJackpotPrize() {
   const { data: results, isLoading, error } = useCurrentResults();
 
+  if(results?.error?.message) {
+    return (
+      <View style={{backgroundColor: "transparent"}}>
+        <Text style={index_styles.data_status}>{results.error.message}</Text>
+      </View>
+    );
+
+  }
   return (
     <View>
       {!results && !isLoading ? (
