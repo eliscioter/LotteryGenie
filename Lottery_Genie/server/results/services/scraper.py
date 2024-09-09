@@ -82,48 +82,53 @@ def scrape_pcso():
     """Scrape the data from the lottoPCSO website and save it to the database"""
     print("Scraping...")
 
-    url = os.environ.get("WEB_URL")
+    try:
+        url = os.environ.get("WEB_URL")
 
-    user_agent = ua.random
+        user_agent = ua.random
 
-    headers = {"User-Agent": user_agent}
+        headers = {"User-Agent": user_agent}
 
-    page = requests.get(url, headers=headers, timeout=5).text
+        page = requests.get(url, headers=headers, timeout=5).text
 
-    soup = BeautifulSoup(page, "html.parser")
+        soup = BeautifulSoup(page, "html.parser")
 
-    lotto_names = [
-        "6/58 Ultra Lotto",
-        "6/55 Grand Lotto",
-        "/49 Super Lotto",
-        "6/45 Mega Lotto",
-        "6/42 Lotto",
-    ]
+        lotto_names = [
+            "6/58 Ultra Lotto",
+            "6/55 Grand Lotto",
+            "/49 Super Lotto",
+            "6/45 Mega Lotto",
+            "6/42 Lotto",
+        ]
 
-    flag = False
-    for lotto_name in lotto_names:
-        combination, game_date, prize, winners = scrape_per_game(soup, lotto_name)
-        if not combination or not game_date or not prize or not winners:
-            flag = True
-            break
-        if "/49" in lotto_name:
-            lotto_name = "6/49 Super Lotto"
+        flag = False
+        for lotto_name in lotto_names:
+            combination, game_date, prize, winners = scrape_per_game(soup, lotto_name)
+            if not combination or not game_date or not prize or not winners:
+                flag = True
+                break
+            if "/49" in lotto_name:
+                lotto_name = "6/49 Super Lotto"
 
-        result = Results(
-            date=parsed_date_or_none(game_date),
-            category=lotto_name,
-            combination=combination,
-            prize=replace_php(prize),
-            winners=winners,
-        )
+            result = Results(
+                date=parsed_date_or_none(game_date),
+                category=lotto_name,
+                combination=combination,
+                prize=replace_php(prize),
+                winners=winners,
+            )
 
-        # Save all results in a single operation
-        save_data(result)
+            # Save all results in a single operation
+            save_data(result)
 
-    if flag:
+        if flag:
+            Results.objects.all().delete()
+            return -1
+        return 1
+    except (AttributeError, IndexError) as e:
+        print(f"Error: {e}")
         Results.objects.all().delete()
         return -1
-    return 1
 
 
 def scrape_summary(category):
@@ -133,43 +138,48 @@ def scrape_summary(category):
     """
     print("Scraping summary...")
 
-    base_url = os.environ.get("WEB_URL")
+    try:
+        base_url = os.environ.get("WEB_URL")
 
-    url = f"{base_url}/6-{category}-lotto-result-history-and-summary"
+        url = f"{base_url}/6-{category}-lotto-result-history-and-summary"
 
-    user_agent = ua.random
+        user_agent = ua.random
 
-    headers = {"User-Agent": user_agent}
+        headers = {"User-Agent": user_agent}
 
-    page = requests.get(url, headers=headers, timeout=5)
+        page = requests.get(url, headers=headers, timeout=5)
 
-    soup = BeautifulSoup(page.content, "html.parser")
+        soup = BeautifulSoup(page.content, "html.parser")
 
-    table = soup.find("table").find("tbody").find_all("tr")
+        table = soup.find("table").find("tbody").find_all("tr")
 
-    for element in table:
-        content = element.find_all("td")
-        flag = False
-        if not content:
-            flag = True
-            break
+        for element in table:
+            content = element.find_all("td")
+            flag = False
+            if not content:
+                flag = True
+                break
 
-        parsed_date = dateparser.parse(content[0].text)
-        parsed_prize = replace_php(content[2].text)
+            parsed_date = dateparser.parse(content[0].text)
+            parsed_prize = replace_php(content[2].text)
 
-        summary = Summary(
-            category=category,
-            date=parsed_date,
-            combination=content[1].text,
-            prize=parsed_prize,
-        )
+            summary = Summary(
+                category=category,
+                date=parsed_date,
+                combination=content[1].text,
+                prize=parsed_prize,
+            )
 
-        save_summary(summary)
+            save_summary(summary)
 
-    if flag:
+        if flag:
+            Summary.objects.all().delete()
+            return -1
+        return 1
+    except (AttributeError, IndexError) as e:
+        print(f"Error: {e}")
         Summary.objects.all().delete()
         return -1
-    return 1
 
 
 def fetch_data():
@@ -185,12 +195,12 @@ def fetch_data():
         res = scrape_pcso()
         # Check if data is completely scraped
         if res == -1:
-            return {"message": "No data"}
+            return {"error" :{"message": "Error updating data"}}
 
         data = Results.objects.filter(date=today)
         return {"data": list(data.values())}
 
-    return {"message": "No data"}
+    return {"error": {"message": "No data"}}
 
 
 def fetch_summary(category):
@@ -205,7 +215,7 @@ def fetch_summary(category):
     if not data.count() or not data.filter(category=category).exists() or not data.filter(date=today).exists():
         res = scrape_summary(category=category)
         if res == -1:
-            return {"message": "No data"}
+            return {"error":{"message": "No data"}}
 
     return {"data": list(data.filter(category=category).values())}
 
@@ -219,7 +229,7 @@ def delete_data():
         return {"message": "Deleted"}
     except (ValueError, TypeError) as e:
         print(f"Error: {e}")
-        return {"message": "Error deleting data"}
+        return {"error":{"message": "Error deleting data"}}
 
 
 def scrape_prizes(category):
@@ -273,12 +283,12 @@ def check_won_prize(category, correct_combination_count):
     games = ("42", "45", "49", "55", "58")
 
     if category not in games:
-        return {"message": "Invalid category"}
+        return {"error":{"message": "Invalid category"}}
 
     if not data.count() or not data.filter(category=category).exists():
         res = scrape_prizes(category=category)
         if res == -1:
-            return {"message": "No data"}
+            return {"error":{"message": "No data"}}
 
     prize_map = {
         6: "first_prize",
@@ -337,22 +347,22 @@ def check_combinations(combinations, category, draw_date):
 
         extracted_category = category.split("/")[1].split(" ")[0]
         if category not in games:
-            return {"message": "Invalid category"}
+            return {"error":{"message": "Invalid category"}}
 
         if not data.filter(category=extracted_category).exists():
             res = scrape_summary(category=extracted_category)
             if res == -1:
-                return {"message": "No data"}
+                return {"error":{"message": "No data"}}
             
         if not data.filter(date=parsed_date).exists():
             res = scrape_summary(category=extracted_category)
             if res == -1:
-                return {"message": "No data"}
+                return {"error":{"message": "No data"}}
 
         if not data.count():
             res = scrape_summary(category=extracted_category)
             if res == -1:
-                return {"message": "No data"}
+                return {"error":{"message": "No data"}}
             
 
         numbers_joined = ["-".join(item['value']) for item in combinations]
@@ -419,4 +429,4 @@ def check_combinations(combinations, category, draw_date):
         return {"data": results_arr}
     except (ValueError, TypeError) as e:
         print(f"Error: {e}")
-        return {"data": "Error checking combinations"}
+        return {"error":{"message": "Error checking combinations"}}
