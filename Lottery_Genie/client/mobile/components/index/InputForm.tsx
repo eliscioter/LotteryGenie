@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "../Themed";
@@ -14,7 +14,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import Toast from "react-native-toast-message";
 import { useCheckCombinationMutation } from "@/services/apis/current-results";
-import { LottoDetails } from "@/types/results-type";
+import { LottoCombination, LottoDetails } from "@/types/results-type";
 import { InputSchema } from "@/validators/current-results";
 import { useCurrentResultStore } from "@/services/shared/result";
 import Colors from "@/constants/Colors";
@@ -54,7 +54,11 @@ export default function InputForm() {
 
   const db = useSQLiteContext();
 
-  const { setUpdateHistoryDetails } = useContext(UpdateHistoryDetailsCtx);
+  const { update_history_details, setUpdateHistoryDetails } = useContext(
+    UpdateHistoryDetailsCtx
+  );
+
+  const [template_history, setTemplateHistory] = useState<LottoCombination | null>(null);
 
   const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
@@ -93,17 +97,13 @@ export default function InputForm() {
       await mutateAsync(data);
       const truncated_date = truncateDate(date.toString()).trim();
 
-      const combined_combination = data.combination.map((item) => item.value).map((value) => value.join("-"));
+      const combined_combination = data.combination
+        .map((item) => item.value)
+        .map((value) => value.join("-"));
 
-      await addHistory(
-        db,
-        data.category,
-        combined_combination,
-        truncated_date
-      );
+      await addHistory(db, data.category, combined_combination, truncated_date);
 
       setUpdateHistoryDetails([]);
-
     } catch (error) {
       console.error("Error submitting data", error);
     }
@@ -143,6 +143,13 @@ export default function InputForm() {
   useEffect(() => {
     delete_user_comb_state();
   }, [reset]);
+
+  useEffect(() => {
+    if(update_history_details.length > 0) {
+      setTemplateHistory(update_history_details[0]);
+    }
+    
+  }, [update_history_details]);
 
   return (
     <>
