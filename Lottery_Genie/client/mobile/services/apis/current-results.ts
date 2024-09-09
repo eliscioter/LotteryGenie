@@ -7,25 +7,22 @@ export const useCurrentResults = () =>
   useQuery<ResultsType & RequestError, AxiosError>({
     queryKey: ["current-results"],
     queryFn: async () => {
-        try {
-            const response = await api.get('/fetch');
-            return response.data;
-          } catch (error) {
-            if (error instanceof AxiosError) {
-              console.error('Axios Errors:', error);
-              throw error;
-            } else {
-              console.error('Unexpected Error:', error);
-            }
-          }
+      try {
+        const response = await api.get("/fetch");
+        return response.data;
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          console.error("Axios Errors:", error);
+          throw error;
+        } else {
+          console.error("Unexpected Error:", error);
+        }
+      }
     },
   });
 
 export const useCheckCombinationMutation = () =>
-  useMutation<
-    ResultsType & RequestError,
-    AxiosError,
-    LottoDetails
-  >({
-    mutationFn: async (data) =>(await api.post('/check-combinations', data)).data,
+  useMutation<ResultsType & RequestError, AxiosError, LottoDetails>({
+    mutationFn: async (data) =>
+      (await api.post("/check-combinations", data)).data,
   });
