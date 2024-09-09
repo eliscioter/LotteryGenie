@@ -41,7 +41,8 @@
     "react-native-toast-message": "^2.2.0",
     "react-native-web": "~0.19.6",
     "zod": "^3.23.0",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "react-native-reanimated": "~3.10.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
