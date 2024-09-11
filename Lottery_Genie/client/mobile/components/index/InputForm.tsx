@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "../Themed";
@@ -27,7 +33,7 @@ export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
-  const { control, handleSubmit, reset } = useForm<LottoDetails>({
+  const { control, handleSubmit, reset, setValue } = useForm<LottoDetails>({
     resolver: zodResolver(InputSchema),
     defaultValues: {
       category: "",
@@ -58,9 +64,11 @@ export default function InputForm() {
     UpdateHistoryDetailsCtx
   );
 
-  const [template_history, setTemplateHistory] = useState<LottoCombination | null>(null);
+  const [template_history, setTemplateHistory] = useState<
+    LottoCombination[] | null
+  >(null);
 
-  const displaySelectedDate = (_: any, selectedDate: Date | undefined) => {
+  const displaySelectedDate = (selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
       setShow(false);
       return;
@@ -103,7 +111,7 @@ export default function InputForm() {
 
       await addHistory(db, data.category, combined_combination, truncated_date);
 
-      setUpdateHistoryDetails([]);
+      setUpdateHistoryDetails([] ?? []);
     } catch (error) {
       console.error("Error submitting data", error);
     }
@@ -145,11 +153,20 @@ export default function InputForm() {
   }, [reset]);
 
   useEffect(() => {
-    if(update_history_details.length > 0) {
-      setTemplateHistory(update_history_details[0]);
+    if (update_history_details.length > 0) {
+      setTemplateHistory(update_history_details);
     }
-    
   }, [update_history_details]);
+
+  useMemo(() => {
+    if (
+      template_history !== null &&
+      (template_history?.at(0)?.combination as unknown as any[])?.length > 1
+    ) {
+      append({ value: Array(6).fill("") });
+      displaySelectedDate(new Date(template_history?.at(0)?.input_date ?? ""));
+    }
+  }, [template_history, update_history_details, date]);
 
   return (
     <>
@@ -158,23 +175,26 @@ export default function InputForm() {
           <Controller
             key="category"
             control={control}
-            render={({ field: { onChange, value } }) => (
-              <DropDownPicker
-                open={open}
-                value={value}
-                items={lotto_categories.map((category) => ({
-                  label: category,
-                  value: category,
-                }))}
-                setOpen={setOpen}
-                setValue={(chosen) => onChange(chosen)}
-                onChangeValue={(chosen) => onChange(chosen)}
-                placeholder={"Category"}
-                style={index_styles.input_options_picker}
-                textStyle={index_styles.light_grey_text}
-                theme="DARK"
-              />
-            )}
+            render={({ field: { onChange, value } }) => {
+              console.log("Category", value);
+              return (
+                <DropDownPicker
+                  open={open}
+                  value={template_history?.at(0)?.category ?? value}
+                  items={lotto_categories.map((category) => ({
+                    label: category,
+                    value: category,
+                  }))}
+                  setOpen={setOpen}
+                  setValue={(chosen) => onChange(chosen)}
+                  onChangeValue={(chosen) => onChange(chosen)}
+                  placeholder={"Category"}
+                  style={index_styles.input_options_picker}
+                  textStyle={index_styles.light_grey_text}
+                  theme="DARK"
+                />
+              );
+            }}
             name="category"
           />
         </View>
@@ -182,21 +202,21 @@ export default function InputForm() {
           <Controller
             key="date"
             control={control}
-            render={({ field: { onChange, value } }) => (
-              <DateTimePicker
-                testID="dateTimePicker"
-                onChange={(chosen) => {
-                  onChange(new Date(chosen.nativeEvent.timestamp));
-                  displaySelectedDate(
-                    chosen,
-                    new Date(chosen.nativeEvent.timestamp)
-                  );
-                }}
-                value={value ?? new Date()}
-                mode="date"
-                is24Hour={true}
-              />
-            )}
+            render={({ field: { onChange, value } }) => {
+              console.log("Date", value);
+              return (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  onChange={(chosen) => {
+                    onChange(new Date(chosen.nativeEvent.timestamp));
+                    displaySelectedDate(new Date(chosen.nativeEvent.timestamp));
+                  }}
+                  value={value ?? new Date()}
+                  mode="date"
+                  is24Hour={true}
+                />
+              );
+            }}
             name="date"
           />
         )}
@@ -206,7 +226,7 @@ export default function InputForm() {
         >
           <Text style={index_styles.light_grey_text}>
             {typeof date === "string"
-              ? date
+              ? template_history?.at(0)?.input_date ?? date
               : date.toLocaleString().split(",")[0]}
           </Text>
         </TouchableOpacity>
@@ -224,33 +244,41 @@ export default function InputForm() {
             style={{ ...index_styles.combinations_container, paddingLeft: 8 }}
             key={field.id}
           >
-            {Array.from({ length: 6 }).map((_, inputIndex) => (
+            {Array.from({ length: 6 }).map((_, input_index) => (
               <Controller
-                key={inputIndex}
+                key={input_index}
                 control={control}
-                name={`combination.${index_arr}.value.${inputIndex}`}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    key={inputIndex}
-                    ref={(ref) => {
-                      if (ref) {
-                        comb_input_ref.current[inputIndex] = ref;
-                      }
-                    }}
-                    onChangeText={(text) => {
-                      onChange(text);
-                      changeInputFocus(inputIndex, text);
-                    }}
-                    onBlur={onBlur}
-                    value={value}
-                    placeholder="0"
-                    placeholderTextColor="white"
-                    selectionColor={"white"}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    style={index_styles.input_text}
-                  />
-                )}
+                name={`combination.${index_arr}.value.${input_index}`}
+                render={({ field: { onChange, onBlur, value } }) => {
+                  value =
+                    template_history
+                      ?.at(0)
+                      ?.combination.at(index_arr)
+                      ?.at(input_index) ?? value;
+                  console.log("value", value);
+                  return (
+                    <TextInput
+                      key={input_index}
+                      ref={(ref) => {
+                        if (ref) {
+                          comb_input_ref.current[input_index] = ref;
+                        }
+                      }}
+                      onChangeText={(text) => {
+                        onChange(text);
+                        changeInputFocus(input_index, text);
+                      }}
+                      onBlur={onBlur}
+                      value={value}
+                      placeholder="0"
+                      placeholderTextColor="white"
+                      selectionColor={"white"}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                      style={index_styles.input_text}
+                    />
+                  );
+                }}
               />
             ))}
             {index_arr > 0 && (
@@ -273,6 +301,7 @@ export default function InputForm() {
             reset();
             setDate("Select Date");
             delete_user_comb_state();
+            setTemplateHistory(null);
           }}
         >
           <Text style={index_styles.light_grey_text}>Clear</Text>

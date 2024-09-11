@@ -16,7 +16,6 @@ import { Swipeable } from "react-native-gesture-handler";
 import { FontAwesome } from "@expo/vector-icons";
 import { SelectCtx } from "./_layout";
 import { Checkbox, Modal, Portal } from "react-native-paper";
-import { set } from "zod";
 
 export default function HistoryScreen() {
   const db = useSQLiteContext();
@@ -36,7 +35,9 @@ export default function HistoryScreen() {
   const [template_modal_visible, setTemplateModalVisibility] = useState(false);
   const [delete_items, setDeleteItems] = useState(false);
   const [use_items, setUseItems] = useState(false);
-  const [items_to_use, setItemsToUse] = useState<LottoCombination | null>(null);
+  const [items_to_use, setItemsToUse] = useState<LottoCombination[] | null>(
+    null
+  );
 
   useEffect(() => {
     try {
@@ -46,7 +47,9 @@ export default function HistoryScreen() {
     } catch (error) {
       console.error("Error fetching history", error);
     } finally {
-      setUpdateHistoryDetails(history);
+      if (!use_items) {
+        setUpdateHistoryDetails(history);
+      }
     }
   }, [update_history_details]);
 
@@ -67,11 +70,10 @@ export default function HistoryScreen() {
     deleteItems();
   }, [delete_items]);
 
-  function useItems(items: LottoCombination | null) {
+  function useItems(items: LottoCombination[] | null) {
     try {
       if (items) {
-        console.log("using items");
-        setUpdateHistoryDetails([items]);
+        setUpdateHistoryDetails(items);
       }
     } catch (error) {
       console.error("Error using items", error);
@@ -79,7 +81,6 @@ export default function HistoryScreen() {
   }
 
   useEffect(() => {
-    console.log("here")
     useItems(items_to_use);
   }, [use_items]);
 
@@ -117,9 +118,21 @@ export default function HistoryScreen() {
   }
 
   function swipeLeftAction(item: LottoCombination) {
-    console.log("swiped left", item);
     setTemplateModalVisibility(true);
-    setItemsToUse(item);
+
+    const revert_to_arr = JSON.parse(item.combination.toString()).map((item: string) =>
+      item.split("-")
+    );
+
+    setItemsToUse([
+      {
+        id: item.id,
+        category: item.category,
+        combination: revert_to_arr,
+        input_date: item.input_date,
+        created_at: item.created_at,
+      },
+    ]);
   }
 
   return (
@@ -365,7 +378,7 @@ export default function HistoryScreen() {
                 </Text>
                 <Text style={history_styles.item_text_color}>
                   Combination:{" "}
-                  {item.combination
+                  {item.combination.toString()
                     .replace(/[\[\]"]/g, "")
                     .replace(/,\s*/g, ", ")}
                 </Text>
