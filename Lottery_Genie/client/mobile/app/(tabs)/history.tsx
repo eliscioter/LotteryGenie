@@ -120,8 +120,8 @@ export default function HistoryScreen() {
   function swipeLeftAction(item: LottoCombination) {
     setTemplateModalVisibility(true);
 
-    const revert_to_arr = JSON.parse(item.combination.toString()).map((item: string) =>
-      item.split("-")
+    const revert_to_arr = JSON.parse(item.combination.toString()).map(
+      (item: string) => item.split("-")
     );
 
     setItemsToUse([
@@ -318,8 +318,11 @@ export default function HistoryScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Swipeable
-            dragOffsetFromLeftEdge={10}
-            dragOffsetFromRightEdge={10}
+            ref={(ref) => {
+              if (template_modal_visible || modal_visible) {
+                ref?.close();
+              }
+            }}
             renderRightActions={() => (
               <>
                 <View style={history_styles.delete_container}>
@@ -378,7 +381,8 @@ export default function HistoryScreen() {
                 </Text>
                 <Text style={history_styles.item_text_color}>
                   Combination:{" "}
-                  {item.combination.toString()
+                  {item.combination
+                    .toString()
                     .replace(/[\[\]"]/g, "")
                     .replace(/,\s*/g, ", ")}
                 </Text>
