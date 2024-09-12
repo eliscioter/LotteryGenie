@@ -1,10 +1,4 @@
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "../Themed";
@@ -166,7 +160,7 @@ export default function InputForm() {
       append({ value: Array(6).fill("") });
       displaySelectedDate(new Date(template_history?.at(0)?.input_date ?? ""));
     }
-  }, [template_history, update_history_details, date]);
+  }, [template_history, update_history_details]);
 
   return (
     <>
@@ -175,26 +169,23 @@ export default function InputForm() {
           <Controller
             key="category"
             control={control}
-            render={({ field: { onChange, value } }) => {
-              console.log("Category", value);
-              return (
-                <DropDownPicker
-                  open={open}
-                  value={template_history?.at(0)?.category ?? value}
-                  items={lotto_categories.map((category) => ({
-                    label: category,
-                    value: category,
-                  }))}
-                  setOpen={setOpen}
-                  setValue={(chosen) => onChange(chosen)}
-                  onChangeValue={(chosen) => onChange(chosen)}
-                  placeholder={"Category"}
-                  style={index_styles.input_options_picker}
-                  textStyle={index_styles.light_grey_text}
-                  theme="DARK"
-                />
-              );
-            }}
+            render={({ field: { onChange, value } }) => (
+              <DropDownPicker
+                open={open}
+                value={template_history?.at(0)?.category ?? value}
+                items={lotto_categories.map((category) => ({
+                  label: category,
+                  value: category,
+                }))}
+                setOpen={setOpen}
+                setValue={(chosen) => onChange(chosen)}
+                onChangeValue={(chosen) => onChange(chosen)}
+                placeholder={"Category"}
+                style={index_styles.input_options_picker}
+                textStyle={index_styles.light_grey_text}
+                theme="DARK"
+              />
+            )}
             name="category"
           />
         </View>
@@ -202,21 +193,18 @@ export default function InputForm() {
           <Controller
             key="date"
             control={control}
-            render={({ field: { onChange, value } }) => {
-              console.log("Date", value);
-              return (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  onChange={(chosen) => {
-                    onChange(new Date(chosen.nativeEvent.timestamp));
-                    displaySelectedDate(new Date(chosen.nativeEvent.timestamp));
-                  }}
-                  value={value ?? new Date()}
-                  mode="date"
-                  is24Hour={true}
-                />
-              );
-            }}
+            render={({ field: { onChange, value } }) => (
+              <DateTimePicker
+                testID="dateTimePicker"
+                onChange={(chosen) => {
+                  onChange(new Date(chosen.nativeEvent.timestamp));
+                  displaySelectedDate(new Date(chosen.nativeEvent.timestamp));
+                }}
+                value={value ?? new Date()}
+                mode="date"
+                is24Hour={true}
+              />
+            )}
             name="date"
           />
         )}
@@ -255,7 +243,6 @@ export default function InputForm() {
                       ?.at(0)
                       ?.combination.at(index_arr)
                       ?.at(input_index) ?? value;
-                  console.log("value", value);
                   return (
                     <TextInput
                       key={input_index}
