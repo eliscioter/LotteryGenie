@@ -1,4 +1,9 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "../Themed";
@@ -22,12 +27,13 @@ import { useSQLiteContext } from "expo-sqlite";
 import { addHistory } from "@/services/db/lotto-combinations";
 import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 import { FontAwesome } from "@expo/vector-icons";
+import { ModalCtx } from "@/services/shared/modal";
 
 export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
-  const { control, handleSubmit, reset, setValue } = useForm<LottoDetails>({
+  const { control, handleSubmit, reset } = useForm<LottoDetails>({
     resolver: zodResolver(InputSchema),
     defaultValues: {
       category: "",
@@ -57,6 +63,8 @@ export default function InputForm() {
   const { update_history_details, setUpdateHistoryDetails } = useContext(
     UpdateHistoryDetailsCtx
   );
+
+  const { modal_status } = useContext(ModalCtx);
 
   const [template_history, setTemplateHistory] = useState<
     LottoCombination[] | null
@@ -147,20 +155,28 @@ export default function InputForm() {
   }, [reset]);
 
   useEffect(() => {
+    console.log(update_history_details, " useEffect for update_history_details");
     if (update_history_details.length > 0) {
       setTemplateHistory(update_history_details);
     }
   }, [update_history_details]);
 
-  useMemo(() => {
-    if (
-      template_history !== null &&
-      (template_history?.at(0)?.combination as unknown as any[])?.length > 1
-    ) {
+  useEffect(() => {
+    console.log(template_history, " useEffect for template_history");
+    const combination_length = (
+      template_history?.at(0)?.combination as unknown as any[]
+    )?.length;
+    if (template_history !== null && combination_length === 1) {
+      for (let i = 0; i < combination_length; i++) {
+        let next_index = i + 1;
+        remove(next_index);
+      }
+      displaySelectedDate(new Date(template_history?.at(0)?.input_date ?? ""));
+    } else if (template_history !== null && combination_length > 1) {
       append({ value: Array(6).fill("") });
       displaySelectedDate(new Date(template_history?.at(0)?.input_date ?? ""));
     }
-  }, [template_history, update_history_details]);
+  }, [template_history]);
 
   return (
     <>
@@ -289,6 +305,7 @@ export default function InputForm() {
             setDate("Select Date");
             delete_user_comb_state();
             setTemplateHistory(null);
+            setUpdateHistoryDetails([]);
           }}
         >
           <Text style={index_styles.light_grey_text}>Clear</Text>
