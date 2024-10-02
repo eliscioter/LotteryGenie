@@ -3,14 +3,10 @@ import { index_styles } from "@/assets/stylesheets/index";
 import { useSQLiteContext } from "expo-sqlite";
 import { useContext, useEffect, useState } from "react";
 import { LottoCombination } from "@/types/results-type";
-import { db_table, fetchHistory } from "@/services/db/lotto-combinations";
-import { history_styles } from "@/assets/stylesheets/history/history";
-import { FlatList, Pressable, SafeAreaView } from "react-native";
+import { fetchHistory } from "@/services/db/lotto-combinations";
+import { FlatList, SafeAreaView } from "react-native";
 import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
-import { Swipeable } from "react-native-gesture-handler";
-import { FontAwesome } from "@expo/vector-icons";
 import { SelectCtx } from "./_layout";
-import { Checkbox, Modal } from "react-native-paper";
 import DialogBox from "../components/DialogBox";
 import SwipeableItems from "../components/SwipeableItems";
 import HistoryActions from "../components/HistoryActions";
@@ -24,7 +20,6 @@ export default function HistoryScreen() {
   const [modal_status, setModalStatus] = useState<ModalState>({
     visibility: false,
     type: null,
-    updated: false,
   });
 
   const { update_history_details, setUpdateHistoryDetails } = useContext(
@@ -40,14 +35,12 @@ export default function HistoryScreen() {
     } catch (error) {
       console.error("Error fetching history", error);
     } finally {
-      console.log(modal_status.updated, " modal_status.updated for history");
-      if (!use_items) {
+      
+      if (use_items) {
         setUpdateHistoryDetails(history);
       }
     }
-  }, [update_history_details, modal_status.updated]);
-
-  console.log(use_items, "use_items *********");
+  }, [update_history_details]);
 
   return (
     <SafeAreaView style={index_styles.container}>
@@ -71,6 +64,9 @@ export default function HistoryScreen() {
           template_functions={{
             setUpdateHistoryDetails,
             setUseItems,
+          }}
+          delete_functions={{
+            setSelected,
           }}
         />
         <FlatList

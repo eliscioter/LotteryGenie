@@ -5,7 +5,7 @@ import { Text, View } from "@/components/Themed";
 import { Swipeable } from "react-native-gesture-handler";
 import { Checkbox } from "react-native-paper";
 import { LottoCombination } from "@/types/results-type";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { db_table } from "@/services/db/lotto-combinations";
 import { useSQLiteContext } from "expo-sqlite";
 import { ModalCtx, ModalType } from "@/services/shared/modal";
@@ -38,11 +38,6 @@ export default function SwipeableItems({
 
   const { modal_status, setModalStatus } = useContext(ModalCtx);
 
-  const [delete_items, setDeleteItems] = useState(false);
-  const [items_to_use, setItemsToUse] = useState<LottoCombination[] | null>(
-    null
-  );
-
   function deleteItems() {
     try {
       selectState.selected.map(async (item: LottoCombination) => {
@@ -53,31 +48,23 @@ export default function SwipeableItems({
       console.error("Error deleting items", error);
     } finally {
       setUpdateHistoryDetails(historyState.history);
-      setDeleteItems(false);
+      setModalStatus({ visibility: false, type: null, delete_updated: false });
     }
   }
-  useEffect(() => {
-    deleteItems();
-  }, [delete_items]);
-
+  if (modal_status.delete_updated) {
+    useEffect(() => {
+      deleteItems();
+    }, [modal_status.delete_updated]);
+  }
   function useItems(items: LottoCombination[] | null) {
     try {
-      console.log(items, " item for use items ~~~~~~~~~~~~~~~");
-
       if (items) {
-        console.log(items, " item for use items @@@@@2@");
         setUpdateHistoryDetails(items);
       }
     } catch (error) {
       console.error("Error using items", error);
     }
   }
-
-  useEffect(() => {
-    // console.log(modal_status.updated,  " modal status updated for swipeable items");
-    console.log(items_to_use,  " items to use for swipeable items !!!!!!");
-    useItems(items_to_use);
-  }, [useItemsState.use_items]);
 
   function deleteFromState(item: LottoCombination) {
     try {
@@ -101,25 +88,17 @@ export default function SwipeableItems({
         return [...prev, item];
       }
     });
-    setModalStatus({ visibility: true, type: ModalType.DELETE, updated: false });
+    setModalStatus({ visibility: true, type: ModalType.DELETE });
   }
 
   function swipeLeftAction(item: LottoCombination) {
-    setModalStatus({ visibility: true, type: ModalType.TEMPLATE, updated: false });
+    setModalStatus({ visibility: true, type: ModalType.TEMPLATE });
 
     const revert_to_arr = JSON.parse(item.combination.toString()).map(
       (item: string) => item.split("-")
     );
 
-    console.log({
-      id: item.id,
-      category: item.category,
-      combination: revert_to_arr,
-      input_date: item.input_date,
-      created_at: item.created_at,
-    }, " item for swipe left action");
-
-    setItemsToUse([
+    useItems([
       {
         id: item.id,
         category: item.category,
@@ -128,6 +107,7 @@ export default function SwipeableItems({
         created_at: item.created_at,
       },
     ]);
+
   }
   return (
     <Swipeable
