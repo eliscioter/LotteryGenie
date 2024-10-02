@@ -64,7 +64,7 @@ export default function HistoryActions({
             color={"white"}
             size={25}
             onPress={() => {
-              setModalStatus({ visibility: true, type: ModalType.DELETE, updated: false });
+              setModalStatus({ visibility: true, type: ModalType.DELETE });
             }}
             style={{ paddingRight: 10 }}
           />
