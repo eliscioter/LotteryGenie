@@ -8,12 +8,13 @@ export enum ModalType {
 export interface ModalState {
   visibility: boolean;
   type: ModalType.DELETE | ModalType.TEMPLATE | null;
-  updated: boolean;
+  template_updated?: boolean;
+  delete_updated?: boolean;
 }
 export const ModalCtx = createContext<{
   modal_status: ModalState;
   setModalStatus: (modal: ModalState) => void;
 }>({
-  modal_status: { visibility: false, type: null, updated: false },
+  modal_status: { visibility: false, type: null, template_updated: false, delete_updated: false },
   setModalStatus: (modal: ModalState) => {},
 });
