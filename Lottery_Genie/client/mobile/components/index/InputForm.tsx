@@ -64,7 +64,7 @@ export default function InputForm() {
     UpdateHistoryDetailsCtx
   );
 
-  const { modal_status } = useContext(ModalCtx);
+  const { setModalStatus } = useContext(ModalCtx);
 
   const [template_history, setTemplateHistory] = useState<
     LottoCombination[] | null
@@ -155,14 +155,13 @@ export default function InputForm() {
   }, [reset]);
 
   useEffect(() => {
-    console.log(update_history_details, " useEffect for update_history_details");
     if (update_history_details.length > 0) {
       setTemplateHistory(update_history_details);
+      setModalStatus({ visibility: false, type: null, template_updated: false });
     }
   }, [update_history_details]);
 
   useEffect(() => {
-    console.log(template_history, " useEffect for template_history");
     const combination_length = (
       template_history?.at(0)?.combination as unknown as any[]
     )?.length;
