@@ -56,6 +56,9 @@ export default function SwipeableItems({
       deleteItems();
     }, [modal_status.delete_updated]);
   }
+
+  // TODO: Refactor this to a custom hook or context
+  // setUpdateHistoryDetails should only be set after confirming
   function useItems(items: LottoCombination[] | null) {
     try {
       if (items) {
