@@ -4,24 +4,51 @@ import { Text, View } from "@/components/Themed";
 import { TouchableOpacity } from "react-native";
 import { ModalCtx, ModalState, ModalType } from "@/services/shared/modal";
 import { LottoCombination } from "@/types/results-type";
+import { useCurrentResultStore } from "@/services/shared/result";
+import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
+import {
+  CompositeNavigationProp,
+  NavigatorScreenParams,
+  useNavigation,
+} from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
+type RootStackParamList = {
+  "(tabs)": NavigatorScreenParams<TabParamList>;
+  modal: undefined;
+};
+
+type TabParamList = {
+  index: undefined;
+  history: undefined;
+};
+
+type NavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<RootStackParamList>,
+  BottomTabNavigationProp<TabParamList>
+>;
 interface DialogBoxProps {
   modal_status: ModalState;
   template_functions?: {
-    setUpdateHistoryDetails: (history: LottoCombination[]) => void;
     setUseItems: (use_items: boolean) => void;
   };
   delete_functions?: {
     setSelected: React.Dispatch<React.SetStateAction<LottoCombination[]>>;
   };
 }
-
 export default function DialogBox({
   modal_status,
   template_functions,
   delete_functions,
 }: DialogBoxProps) {
   const { setModalStatus } = useContext(ModalCtx);
+
+  const { setUpdateHistoryDetails } = useContext(UpdateHistoryDetailsCtx);
+
+  const { clearResult } = useCurrentResultStore();
+
+  const navigation = useNavigation<NavigationProp>();
 
   const { type } = modal_status;
 
@@ -50,6 +77,8 @@ export default function DialogBox({
         template_updated: true,
       });
       template_functions.setUseItems(true);
+      clearResult();
+      navigation.navigate("(tabs)", { screen: "index" });
     }
   }
 
@@ -69,7 +98,7 @@ export default function DialogBox({
       delete_functions.setSelected([]);
     } else if (type === ModalType.TEMPLATE) {
       setModalStatus({ visibility: false, type: ModalType.TEMPLATE });
-      template_functions.setUpdateHistoryDetails([]);
+      setUpdateHistoryDetails([]);
     }
   }
 
@@ -86,7 +115,10 @@ export default function DialogBox({
       <Portal>
         <Modal
           visible={modal_status.visibility}
-          onDismiss={() => setModalStatus({ visibility: false, type: null })}
+          onDismiss={() => {
+            setModalStatus({ visibility: false, type: null });
+            setUpdateHistoryDetails([]);
+          }}
           contentContainerStyle={{
             backgroundColor: "white",
             padding: 20,
