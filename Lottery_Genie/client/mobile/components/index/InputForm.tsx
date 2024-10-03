@@ -1,9 +1,4 @@
-import React, {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
 import { index_styles } from "@/assets/stylesheets/index";
 import { View, Text } from "../Themed";
@@ -19,7 +14,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import Toast from "react-native-toast-message";
 import { useCheckCombinationMutation } from "@/services/apis/current-results";
-import { LottoCombination, LottoDetails } from "@/types/results-type";
+import { LottoDetails } from "@/types/results-type";
 import { InputSchema } from "@/validators/current-results";
 import { useCurrentResultStore } from "@/services/shared/result";
 import Colors from "@/constants/Colors";
@@ -33,7 +28,8 @@ export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
-  const { control, handleSubmit, reset } = useForm<LottoDetails>({
+
+  const { control, handleSubmit, reset, setValue } = useForm<LottoDetails>({
     resolver: zodResolver(InputSchema),
     defaultValues: {
       category: "",
@@ -65,10 +61,6 @@ export default function InputForm() {
   );
 
   const { setModalStatus } = useContext(ModalCtx);
-
-  const [template_history, setTemplateHistory] = useState<
-    LottoCombination[] | null
-  >(null);
 
   const displaySelectedDate = (selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
@@ -104,8 +96,9 @@ export default function InputForm() {
   const handleSubmitCombination = async (data: LottoDetails) => {
     try {
       delete_user_comb_state();
-      await mutateAsync(data);
       const truncated_date = truncateDate(date.toString()).trim();
+
+      await mutateAsync(data);
 
       const combined_combination = data.combination
         .map((item) => item.value)
@@ -120,6 +113,7 @@ export default function InputForm() {
   };
 
   const handleError: SubmitErrorHandler<LottoDetails> = (errors) => {
+    console.error(errors);
     Toast.show({
       type: "error",
       text1: "Error",
@@ -151,31 +145,54 @@ export default function InputForm() {
   }, [result]);
 
   useEffect(() => {
-    delete_user_comb_state();
-  }, [reset]);
-
-  useEffect(() => {
     if (update_history_details.length > 0) {
-      setTemplateHistory(update_history_details);
-      setModalStatus({ visibility: false, type: null, template_updated: false });
+      const combination_length = (
+        update_history_details?.at(0)?.combination as unknown as any[]
+      )?.length;
+
+      if (combination_length === 1) {
+        for (let i = 0; i < combination_length; i++) {
+          let next_index = i + 1;
+          remove(next_index);
+        }
+        displaySelectedDate(
+          new Date(update_history_details?.at(0)?.input_date ?? "")
+        );
+      } else if (combination_length > 1) {
+        append({ value: Array(6).fill("") });
+        remove(combination_length);
+        displaySelectedDate(
+          new Date(update_history_details?.at(0)?.input_date ?? "")
+        );
+      }
     }
   }, [update_history_details]);
 
   useEffect(() => {
-    const combination_length = (
-      template_history?.at(0)?.combination as unknown as any[]
-    )?.length;
-    if (template_history !== null && combination_length === 1) {
-      for (let i = 0; i < combination_length; i++) {
-        let next_index = i + 1;
-        remove(next_index);
-      }
-      displaySelectedDate(new Date(template_history?.at(0)?.input_date ?? ""));
-    } else if (template_history !== null && combination_length > 1) {
-      append({ value: Array(6).fill("") });
-      displaySelectedDate(new Date(template_history?.at(0)?.input_date ?? ""));
+    if (update_history_details.length > 0) {
+      const origin_date = new Date(update_history_details?.at(0)?.input_date!);
+      const offset_ms = origin_date.getTimezoneOffset() * 60 * 1000;
+      const adjusted_date = new Date(origin_date.getTime() - offset_ms);
+
+      setValue("date", adjusted_date);
+      
+      update_history_details.at(0)?.combination.forEach((item, index) => {
+        for (let i = 0; i < item.length; i++) {
+          setValue(`combination.${index}.value.${i}`, item.at(i)! ?? "");
+        }
+      });
     }
-  }, [template_history]);
+  }, [update_history_details]);
+
+  useEffect(() => {
+    if (update_history_details.length > 0) {
+      setModalStatus({
+        visibility: false,
+        type: null,
+        template_updated: false,
+      });
+    }
+  }, [update_history_details]);
 
   return (
     <>
@@ -187,7 +204,7 @@ export default function InputForm() {
             render={({ field: { onChange, value } }) => (
               <DropDownPicker
                 open={open}
-                value={template_history?.at(0)?.category ?? value}
+                value={update_history_details?.at(0)?.category ?? value}
                 items={lotto_categories.map((category) => ({
                   label: category,
                   value: category,
@@ -229,7 +246,7 @@ export default function InputForm() {
         >
           <Text style={index_styles.light_grey_text}>
             {typeof date === "string"
-              ? template_history?.at(0)?.input_date ?? date
+              ? update_history_details?.at(0)?.input_date ?? date
               : date.toLocaleString().split(",")[0]}
           </Text>
         </TouchableOpacity>
@@ -238,6 +255,7 @@ export default function InputForm() {
         <TouchableOpacity
           onPress={() => {
             append({ value: Array(6).fill("") });
+            clearResult();
           }}
         >
           <FontAwesome name="plus-circle" size={18} color="white" />
@@ -253,11 +271,6 @@ export default function InputForm() {
                 control={control}
                 name={`combination.${index_arr}.value.${input_index}`}
                 render={({ field: { onChange, onBlur, value } }) => {
-                  value =
-                    template_history
-                      ?.at(0)
-                      ?.combination.at(index_arr)
-                      ?.at(input_index) ?? value;
                   return (
                     <TextInput
                       key={input_index}
@@ -303,7 +316,6 @@ export default function InputForm() {
             reset();
             setDate("Select Date");
             delete_user_comb_state();
-            setTemplateHistory(null);
             setUpdateHistoryDetails([]);
           }}
         >
