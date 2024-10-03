@@ -35,7 +35,6 @@ export default function HistoryScreen() {
     } catch (error) {
       console.error("Error fetching history", error);
     } finally {
-      
       if (use_items) {
         setUpdateHistoryDetails(history);
       }
@@ -62,7 +61,6 @@ export default function HistoryScreen() {
         <DialogBox
           modal_status={modal_status}
           template_functions={{
-            setUpdateHistoryDetails,
             setUseItems,
           }}
           delete_functions={{
