@@ -7,8 +7,7 @@ import Colors from "@/constants/Colors";
 import { SafeAreaView } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
-export default function TabOneScreen() {
-
+export default function HomeScreen() {
   const today = new Date();
 
   const date_today = today.toLocaleDateString("en-US", {
@@ -30,8 +29,8 @@ export default function TabOneScreen() {
           <Text style={index_styles.title}>{date_today}</Text>
           <CurrentJackpotPrize />
           <View style={index_styles.input_form_container}>
-              <InputForm />
-              <Result />
+            <InputForm />
+            <Result />
           </View>
         </View>
       </ScrollView>
