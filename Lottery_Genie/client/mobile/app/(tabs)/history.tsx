@@ -74,7 +74,6 @@ export default function HistoryScreen() {
             <SwipeableItems
               item={item}
               is_pressed={is_pressed}
-              setUpdateHistoryDetails={setUpdateHistoryDetails}
               historyState={{ history, setHistory }}
               selectState={{ selected, setSelected }}
               useItemsState={{ use_items, setUseItems }}

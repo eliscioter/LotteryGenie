@@ -9,12 +9,14 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { db_table } from "@/services/db/lotto-combinations";
 import { useSQLiteContext } from "expo-sqlite";
 import { ModalCtx, ModalType } from "@/services/shared/modal";
+import {
+  UpdateHistoryDetailsCtx,
+} from "@/services/shared/history-details-ctx";
 
 export default function SwipeableItems({
   item,
   is_pressed,
   selectState,
-  setUpdateHistoryDetails,
   useItemsState,
   historyState,
 }: {
@@ -24,7 +26,6 @@ export default function SwipeableItems({
     selected: LottoCombination[];
     setSelected: React.Dispatch<React.SetStateAction<LottoCombination[]>>;
   };
-  setUpdateHistoryDetails: (history: LottoCombination[]) => void;
   useItemsState: {
     use_items: boolean;
     setUseItems: (use_items: boolean) => void;
@@ -37,6 +38,8 @@ export default function SwipeableItems({
   const db = useSQLiteContext();
 
   const { modal_status, setModalStatus } = useContext(ModalCtx);
+
+  const { setUpdateHistoryDetails } = useContext(UpdateHistoryDetailsCtx);
 
   function deleteItems() {
     try {
@@ -57,8 +60,6 @@ export default function SwipeableItems({
     }, [modal_status.delete_updated]);
   }
 
-  // TODO: Refactor this to a custom hook or context
-  // setUpdateHistoryDetails should only be set after confirming
   function useItems(items: LottoCombination[] | null) {
     try {
       if (items) {
@@ -110,7 +111,6 @@ export default function SwipeableItems({
         created_at: item.created_at,
       },
     ]);
-
   }
   return (
     <Swipeable
