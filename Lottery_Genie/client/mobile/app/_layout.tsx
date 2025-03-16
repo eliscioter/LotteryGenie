@@ -21,6 +21,7 @@ import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { LottoCombination } from "@/types/results-type";
+import { requestUserPermission, setupMessageListeners } from "@/services/firebase/FCMService";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -81,6 +82,11 @@ function RootLayoutNav() {
         });
     }
   }, [init_db]);
+
+  useEffect(() => {
+    requestUserPermission();
+    setupMessageListeners();
+  }, []);
 
   return (
     <>
