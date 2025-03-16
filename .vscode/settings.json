@@ -10,5 +10,6 @@
         "tanstack",
         "useragent",
         "zustand"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
