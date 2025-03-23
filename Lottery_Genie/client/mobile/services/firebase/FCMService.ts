@@ -1,5 +1,6 @@
 import messaging from "@react-native-firebase/messaging";
 import { Alert } from "react-native";
+import { useSendFCMTokenMutation } from "../apis/firebase-fcm";
 
 export async function requestUserPermission() {
     const auth_status = await messaging().requestPermission();
@@ -18,7 +19,7 @@ export async function getFcmToken() {
         const fcm_token = await messaging().getToken();
 
         if (fcm_token) {
-            console.log('FCM Token: ', fcm_token);
+            return fcm_token;
         }
     } catch (error) {
         console.error('Error getting FCM token: ', error);
