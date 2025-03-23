@@ -1,5 +1,5 @@
 import api from "@/config/axios";
-import { LottoDetails, ResultsType, ResultType } from "@/types/results-type";
+import { LottoDetails, ResultsType } from "@/types/results-type";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
@@ -8,7 +8,7 @@ export const useCurrentResults = () =>
     queryKey: ["current-results"],
     queryFn: async () => {
       try {
-        const response = await api.get("/fetch");
+        const response = await api.django.get("/fetch");
         return response.data;
       } catch (error) {
         if (error instanceof AxiosError) {
@@ -24,5 +24,5 @@ export const useCurrentResults = () =>
 export const useCheckCombinationMutation = () =>
   useMutation<ResultsType & RequestError, AxiosError, LottoDetails>({
     mutationFn: async (data) =>
-      (await api.post("/check-combinations", data)).data,
+      (await api.django.post("/check-combinations", data)).data,
   });
