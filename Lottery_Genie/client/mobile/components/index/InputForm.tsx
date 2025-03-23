@@ -106,7 +106,7 @@ export default function InputForm() {
 
       await addHistory(db, data.category, combined_combination, truncated_date);
 
-      setUpdateHistoryDetails([] ?? []);
+      setUpdateHistoryDetails([]);
     } catch (error) {
       console.error("Error submitting data", error);
     }
