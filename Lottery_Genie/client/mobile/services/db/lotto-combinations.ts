@@ -1,41 +1,21 @@
 import { LottoCombination } from "@/types/results-type";
-import { openDatabaseAsync, SQLiteDatabase } from "expo-sqlite";
-
-export const db_name = "lottery_genie.db";
-
-export const db_table = "lotto_combinations";
-
-export const loadDatabase = async () => {
-  try {
-    const db = await openDatabaseAsync(db_name);
-
-    await db.runAsync(
-      `CREATE TABLE IF NOT EXISTS ${db_table} (
-        id INTEGER PRIMARY KEY, 
-        category TEXT, 
-        combination JSON, 
-        input_date TEXT, 
-        created_at TEXT
-        )`
-    );
-
-    return true;
-  } catch (error) {
-    console.error("Error creating table", error);
-    return false;
-  }
-};
+import { db, lotto_combinations_table } from "./loadDatabase";
 
 export const addHistory = async (
-  db: SQLiteDatabase,
   category: string,
   combination: string[],
   input_date: string
 ) => {
   try {
+
+    if (!db) {
+      console.error("Database not initialized");
+      return false;
+    }
+
     const combination_string = JSON.stringify(combination);
     await db.runAsync(
-      `INSERT INTO ${db_table} (category, combination, input_date, created_at) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO ${lotto_combinations_table} (category, combination, input_date, created_at) VALUES (?, ?, ?, ?)`,
       [category, combination_string, input_date, new Date().toISOString()]
     );
 
@@ -46,10 +26,15 @@ export const addHistory = async (
   }
 };
 
-export const fetchHistory = async (db: SQLiteDatabase) => {
+export const fetchHistory = async () => {
   try {
+    if (!db) {
+      console.error("Database not initialized");
+      return [];
+    }
+
     const results: LottoCombination[] = await db.getAllAsync(
-      `SELECT * FROM ${db_table}`
+      `SELECT * FROM ${lotto_combinations_table}`
     );
 
     return results;
@@ -58,3 +43,21 @@ export const fetchHistory = async (db: SQLiteDatabase) => {
     return [];
   }
 };
+
+export const deleteItemHistory = async (item_id: string) => {
+  try {
+    if (!db) {
+      console.error("Database not initialized");
+      return false;
+    }
+
+    await db.runAsync(
+      `DELETE FROM ${lotto_combinations_table} WHERE id = ?`,
+      [item_id]
+    );
+    return true;
+  } catch (error) {
+    console.error("Error deleting item", error);
+    return false;
+  }
+}

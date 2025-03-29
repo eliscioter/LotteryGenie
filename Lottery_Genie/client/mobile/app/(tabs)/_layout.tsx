@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Tabs } from "expo-router";
 import { Pressable, Text } from "react-native";
@@ -9,6 +9,7 @@ import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 import { useSendFCMTokenMutation } from "@/services/apis/firebase-fcm";
 import { getFcmToken } from "@/services/firebase/FCMService";
+import { addFCMToken, fetchFCMToken } from "@/services/db/fcm-token";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -32,17 +33,36 @@ export default function TabLayout() {
 
   const [history_tab_pressed, setHistoryTabPressed] = useState(false);
 
-  const { mutateAsync } = useSendFCMTokenMutation();
-
+  const { mutateAsync, isPending, isSuccess } = useSendFCMTokenMutation();
   useMemo(() => {
-    getFcmToken().then(async (fcm_token) =>{
-      if (fcm_token) {
+    getFcmToken().then(async (fcm_token) => {
+
+      const stored_fcm_token = await fetchFCMToken();
+
+      if(!fcm_token) {
+        console.log("FCM token is null or undefined")
+        return;
+      }
+
+      if (stored_fcm_token !== fcm_token) {
+        await addFCMToken(fcm_token);
         await mutateAsync(fcm_token);
       }
+
     }).catch((error) => {
       console.error("Error sending FCM token: ", error);
     });
   }, []);
+
+  useEffect(() => {
+    if (isPending) {
+      console.log("Pending...");
+    }
+
+    if (isSuccess) {
+      console.log("FCM token sent successfully!");
+    }
+  },[isPending, isSuccess]);
 
 
   return (
