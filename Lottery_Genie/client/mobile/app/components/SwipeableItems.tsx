@@ -2,12 +2,11 @@ import { history_styles } from "@/assets/stylesheets/history/history";
 import { FontAwesome } from "@expo/vector-icons";
 import { Pressable } from "react-native";
 import { Text, View } from "@/components/Themed";
-import { Swipeable } from "react-native-gesture-handler";
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Checkbox } from "react-native-paper";
 import { LottoCombination } from "@/types/results-type";
-import { useContext, useEffect, useMemo, useState } from "react";
-import { db_table } from "@/services/db/lotto-combinations";
-import { useSQLiteContext } from "expo-sqlite";
+import { useContext, useEffect } from "react";
+import { deleteItemHistory } from "@/services/db/lotto-combinations";
 import { ModalCtx, ModalType } from "@/services/shared/modal";
 import {
   UpdateHistoryDetailsCtx,
@@ -35,7 +34,6 @@ export default function SwipeableItems({
     setHistory: React.Dispatch<React.SetStateAction<LottoCombination[]>>;
   };
 }) {
-  const db = useSQLiteContext();
 
   const { modal_status, setModalStatus } = useContext(ModalCtx);
 
@@ -45,7 +43,7 @@ export default function SwipeableItems({
     try {
       selectState.selected.map(async (item: LottoCombination) => {
         deleteFromState(item);
-        await db.runAsync(`DELETE FROM ${db_table} WHERE id = ?`, item.id);
+        await deleteItemHistory(item.id);
       });
     } catch (error) {
       console.error("Error deleting items", error);

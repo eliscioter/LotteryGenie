@@ -1,6 +1,5 @@
 import { Text, View } from "@/components/Themed";
 import { index_styles } from "@/assets/stylesheets/index";
-import { useSQLiteContext } from "expo-sqlite";
 import { useContext, useEffect, useState } from "react";
 import { LottoCombination } from "@/types/results-type";
 import { fetchHistory } from "@/services/db/lotto-combinations";
@@ -13,7 +12,6 @@ import HistoryActions from "../components/HistoryActions";
 import { ModalCtx, ModalState } from "@/services/shared/modal";
 
 export default function HistoryScreen() {
-  const db = useSQLiteContext();
   const [history, setHistory] = useState<LottoCombination[]>([]);
   const [selected, setSelected] = useState<LottoCombination[]>([]);
   const [use_items, setUseItems] = useState(false);
@@ -29,7 +27,7 @@ export default function HistoryScreen() {
 
   useEffect(() => {
     try {
-      fetchHistory(db).then((results) => {
+      fetchHistory().then((results) => {
         setHistory(results.reverse());
       });
     } catch (error) {

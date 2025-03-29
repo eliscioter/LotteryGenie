@@ -54,8 +54,6 @@ export default function InputForm() {
 
   const comb_input_ref = useRef<TextInput[]>([]);
 
-  const db = useSQLiteContext();
-
   const { update_history_details, setUpdateHistoryDetails } = useContext(
     UpdateHistoryDetailsCtx
   );
@@ -104,7 +102,7 @@ export default function InputForm() {
         .map((item) => item.value)
         .map((value) => value.join("-"));
 
-      await addHistory(db, data.category, combined_combination, truncated_date);
+      await addHistory(data.category, combined_combination, truncated_date);
 
       setUpdateHistoryDetails([]);
     } catch (error) {

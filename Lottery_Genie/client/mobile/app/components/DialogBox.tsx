@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Modal, Portal } from "react-native-paper";
 import { Text, View } from "@/components/Themed";
 import { TouchableOpacity } from "react-native";
