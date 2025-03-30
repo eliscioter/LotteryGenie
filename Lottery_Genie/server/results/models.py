@@ -26,3 +26,15 @@ class Prizes(models.Model):
     third_prize = models.CharField(max_length=20)
     fourth_prize = models.CharField(max_length=20)
     objects = models.Manager()
+
+class NotificationToken(models.Model):
+    """ This class represents the notification token for the user. """
+    token = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+
+    def __str__(self):
+        if self.token:
+            return self.token
+        return "No token found"
