@@ -2,7 +2,7 @@ import { FCMTokenType } from "@/types/fcm-token-type";
 import { db, fcm_token_table } from "./loadDatabase";
 
 export const addFCMToken = async (
-  fcm_token: string
+  tokens: FCMTokenType
 ) => {
   try {
 
@@ -12,8 +12,8 @@ export const addFCMToken = async (
     }
 
     await db.runAsync(
-      `INSERT INTO ${fcm_token_table} (fcm_token, created_at) VALUES (?, ?)`,
-      [fcm_token, new Date().toISOString()]
+      `INSERT INTO ${fcm_token_table} (fcm_token, correlation_token, created_at) VALUES (?, ?, ?)`,
+      [tokens.fcm_token, tokens.correlation_token, new Date().toISOString()]
     );
 
     return true;

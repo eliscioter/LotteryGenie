@@ -44,7 +44,7 @@ export default function TabLayout() {
         return;
       }
 
-      if (stored_fcm_token !== fcm_token) {
+      if (stored_fcm_token !== fcm_token.fcm_token) {
         await addFCMToken(fcm_token);
         await mutateAsync(fcm_token);
       }

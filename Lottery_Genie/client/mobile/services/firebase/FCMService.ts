@@ -1,6 +1,7 @@
 import messaging from "@react-native-firebase/messaging";
 import { Alert } from "react-native";
-import { useSendFCMTokenMutation } from "../apis/firebase-fcm";
+import "react-native-get-random-values";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function requestUserPermission() {
     const auth_status = await messaging().requestPermission();
@@ -19,7 +20,10 @@ export async function getFcmToken() {
         const fcm_token = await messaging().getToken();
 
         if (fcm_token) {
-            return fcm_token;
+            return {
+                fcm_token,
+                correlation_token: generateCorrelationToken(),
+            };
         }
     } catch (error) {
         console.error('Error getting FCM token: ', error);
@@ -54,4 +58,9 @@ export function setupMessageListeners() {
         });
 
     return unsubscribe;
+}
+
+function generateCorrelationToken() {
+    return uuidv4();
+
 }

@@ -53,6 +53,7 @@ async function createFCMTokenTable() {
       `CREATE TABLE IF NOT EXISTS ${fcm_token_table} (
         id INTEGER PRIMARY KEY,
         fcm_token TEXT,
+        correlation_token TEXT,
         created_at TEXT,
         updated_at TEXT
       )`
