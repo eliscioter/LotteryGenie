@@ -5,6 +5,7 @@ from typing import NamedTuple
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .services import scraper
+from .services import token as token_service
 
 
 def results(_):
@@ -49,3 +50,18 @@ def combinations(request):
         lotto_details.combination, lotto_details.category, lotto_details.date
     )
     return JsonResponse(response)
+
+@csrf_exempt
+def notification_token(request):
+    """
+    This function handles the notification token for the user.
+    It saves the token to the database and returns a JSON response.
+    """
+    try:
+        data = json.loads(request.body.decode())
+        token = data.get("token")
+        response = token_service.store_token(token)
+        return JsonResponse(response)
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({"error": str(e)}, status=500)

@@ -14,6 +14,8 @@ from fake_useragent import UserAgent
 
 from ..models import Results, Summary, Prizes
 
+import json
+
 # Initialize the environment variables
 load_dotenv()
 
@@ -23,7 +25,7 @@ ua = UserAgent()
 
 def replace_php(prize):
     """Replace Php with ₱ in the prize and return it"""
-    return prize.replace("Php", "\u20B1")
+    return prize.replace("Php", "\u20b1")
 
 
 def parsed_date_or_none(to_parsed_date):
@@ -195,7 +197,7 @@ def fetch_data():
         res = scrape_pcso()
         # Check if data is completely scraped
         if res == -1:
-            return {"error" :{"message": "Error updating data"}}
+            return {"error": {"message": "Error updating data"}}
 
         data = Results.objects.filter(date=today)
         return {"data": list(data.values())}
@@ -211,11 +213,15 @@ def fetch_summary(category):
 
     if category not in games:
         return {"message": "Invalid category"}
-    
-    if not data.count() or not data.filter(category=category).exists() or not data.filter(date=today).exists():
+
+    if (
+        not data.count()
+        or not data.filter(category=category).exists()
+        or not data.filter(date=today).exists()
+    ):
         res = scrape_summary(category=category)
         if res == -1:
-            return {"error":{"message": "No data"}}
+            return {"error": {"message": "No data"}}
 
     return {"data": list(data.filter(category=category).values())}
 
@@ -229,7 +235,7 @@ def delete_data():
         return {"message": "Deleted"}
     except (ValueError, TypeError) as e:
         print(f"Error: {e}")
-        return {"error":{"message": "Error deleting data"}}
+        return {"error": {"message": "Error deleting data"}}
 
 
 def scrape_prizes(category):
@@ -283,12 +289,12 @@ def check_won_prize(category, correct_combination_count):
     games = ("42", "45", "49", "55", "58")
 
     if category not in games:
-        return {"error":{"message": "Invalid category"}}
+        return {"error": {"message": "Invalid category"}}
 
     if not data.count() or not data.filter(category=category).exists():
         res = scrape_prizes(category=category)
         if res == -1:
-            return {"error":{"message": "No data"}}
+            return {"error": {"message": "No data"}}
 
     prize_map = {
         6: "first_prize",
@@ -296,7 +302,7 @@ def check_won_prize(category, correct_combination_count):
         4: "third_prize",
         3: "fourth_prize",
     }
-    
+
     message_map = {
         6: "Congratulations! You won the first prize!",
         5: "Congratulations! You won the second prize!",
@@ -306,13 +312,19 @@ def check_won_prize(category, correct_combination_count):
     }
 
     prize_won = prize_map.get(correct_combination_count, -1)
-    
-    prize_message = message_map.get(correct_combination_count, "Sorry, you didn't win any prize")
-    
+
+    prize_message = message_map.get(
+        correct_combination_count, "Sorry, you didn't win any prize"
+    )
+
     if prize_won != -1:
-        return {"amount": data.filter(category=category).values(prize_won).get()[prize_won], "message": prize_message}
+        return {
+            "amount": data.filter(category=category).values(prize_won).get()[prize_won],
+            "message": prize_message,
+        }
     else:
-        return {"amount": 0,"message": "Sorry, you didn't win any prize"}
+        return {"amount": 0, "message": "Sorry, you didn't win any prize"}
+
 
 def check_correct_combinations(user_combinations, correct_combinations):
     """
@@ -323,7 +335,11 @@ def check_correct_combinations(user_combinations, correct_combinations):
         num for num in user_combinations if num in correct_combinations
     ]
 
-    return {"user_combination": user_combinations, "numbers": numbers_got_right, "count": len(numbers_got_right)}
+    return {
+        "user_combination": user_combinations,
+        "numbers": numbers_got_right,
+        "count": len(numbers_got_right),
+    }
 
 
 def reconvert_to_array(combination):
@@ -342,69 +358,71 @@ def check_combinations(combinations, category, draw_date):
     }
     try:
         data = Summary.objects
-        
+
         parsed_date = datetime.fromisoformat(draw_date).strftime("%Y-%m-%d")
 
         extracted_category = category.split("/")[1].split(" ")[0]
         if category not in games:
-            return {"error":{"message": "Invalid category"}}
+            return {"error": {"message": "Invalid category"}}
 
         if not data.filter(category=extracted_category).exists():
             res = scrape_summary(category=extracted_category)
             if res == -1:
-                return {"error":{"message": "No data"}}
-            
+                return {"error": {"message": "No data"}}
+
         if not data.filter(date=parsed_date).exists():
             res = scrape_summary(category=extracted_category)
             if res == -1:
-                return {"error":{"message": "No data"}}
+                return {"error": {"message": "No data"}}
 
         if not data.count():
             res = scrape_summary(category=extracted_category)
             if res == -1:
-                return {"error":{"message": "No data"}}
-            
+                return {"error": {"message": "No data"}}
 
-        numbers_joined = ["-".join(item['value']) for item in combinations]
-        
+        numbers_joined = ["-".join(item["value"]) for item in combinations]
+
         results_arr = []
         for value in numbers_joined:
             winning_combination = data.filter(
                 category=extracted_category, combination=value, date=parsed_date
             ).values()
-            
+
             if winning_combination.count() == 0:
                 right_combination = list(
                     data.filter(category=extracted_category, date=parsed_date).values()
                 )
-                
+
                 numbers_list = reconvert_to_array(right_combination[0]["combination"])
-                
+
                 value_list = reconvert_to_array(value)
 
-                compared_combinations = check_correct_combinations(value_list, numbers_list)
+                compared_combinations = check_correct_combinations(
+                    value_list, numbers_list
+                )
 
                 prize_amount = check_won_prize(
                     extracted_category, compared_combinations["count"]
                 )
-                
-                results_arr.append({
-                    "category": right_combination[0]["category"],
-                    "date": right_combination[0]["date"],
-                    "combination": numbers_list,
-                    "prize": right_combination[0]["prize"],
-                    "result": compared_combinations,
-                    "prize_amount":prize_amount
-                })
+
+                results_arr.append(
+                    {
+                        "category": right_combination[0]["category"],
+                        "date": right_combination[0]["date"],
+                        "combination": numbers_list,
+                        "prize": right_combination[0]["prize"],
+                        "result": compared_combinations,
+                        "prize_amount": prize_amount,
+                    }
+                )
 
             if winning_combination.count() >= 1:
 
                 winning_combination_list = reconvert_to_array(
                     winning_combination[0]["combination"]
                 )
-                
+
                 value_list = reconvert_to_array(value)
-                
 
                 compared_combinations = check_correct_combinations(
                     value_list, winning_combination_list
@@ -413,20 +431,56 @@ def check_combinations(combinations, category, draw_date):
                 prize_amount = check_won_prize(
                     extracted_category, compared_combinations["count"]
                 )
-                
-                results_arr.append({
-                    "category": winning_combination[0]["category"],
-                    "date": winning_combination[0]["date"],
-                    "combination": winning_combination_list,
-                    "prize": winning_combination[0]["prize"],
-                    "result": compared_combinations,
-                    "prize_amount": prize_amount
 
-                })
-                
-        if(len(results_arr) == 0):
+                results_arr.append(
+                    {
+                        "category": winning_combination[0]["category"],
+                        "date": winning_combination[0]["date"],
+                        "combination": winning_combination_list,
+                        "prize": winning_combination[0]["prize"],
+                        "result": compared_combinations,
+                        "prize_amount": prize_amount,
+                    }
+                )
+
+        if len(results_arr) == 0:
             return {"data": "No data"}
+        push_notification(results_arr)
         return {"data": results_arr}
     except (ValueError, TypeError) as e:
         print(f"Error: {e}")
-        return {"error":{"message": "Error checking combinations"}}
+        return {"error": {"message": "Error checking combinations"}}
+
+
+def serialize_date(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+def push_notification(results):
+    """
+    Push notification to the user using the Spring server
+    """
+    try:
+        url = os.environ.get("SPRING_URL")
+        headers = {"Content-Type": "application/json"}
+
+        payload = {
+            "title": "Testing",
+            "body": json.dumps(results, default=serialize_date),
+        }
+
+        response = requests.post(
+            url + "/notification/send-to-all",
+            json=payload,
+            headers=headers,
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return {"message": "Notification sent successfully"}
+        return {"error": {"message": "Error sending notification"}}
+    except Exception as e:
+        print(f"Error: {e}")
+        return {"error": {"message": "Error sending notification"}}

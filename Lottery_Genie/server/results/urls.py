@@ -7,4 +7,5 @@ urlpatterns = [
     path('fetch/summary/<category>', views.summary, name='summary_func'),
     path("delete", views.delete, name="delete_data"),
     path("check-combinations", views.combinations, name="combinations"),
+    path("notification-token", views.notification_token, name="notification_token"),
 ]
