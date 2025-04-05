@@ -1,4 +1,5 @@
-import messaging from "@react-native-firebase/messaging";
+import { PushNotificationType } from "@/types/results-type";
+import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Alert } from "react-native";
 import "react-native-get-random-values";
 import { v4 as uuidv4 } from 'uuid';
@@ -31,8 +32,15 @@ export async function getFcmToken() {
 }
 
 export function setupMessageListeners() {
-    const unsubscribe = messaging().onMessage(async remote_message => {
-        Alert.alert("A new message arrived!", JSON.stringify(remote_message));
+    const unsubscribe = messaging().onMessage(async (remote_message: FirebaseMessagingTypes.RemoteMessage) => {
+        if (remote_message.notification) {
+            Alert.alert(
+              remote_message.notification.title || "New Message",
+              remote_message.notification.body || JSON.stringify(remote_message)
+            );
+          } else {
+            Alert.alert("Lotto Genie", JSON.stringify(remote_message));
+          }
     })
 
     messaging().setBackgroundMessageHandler(async remoteMessage => {

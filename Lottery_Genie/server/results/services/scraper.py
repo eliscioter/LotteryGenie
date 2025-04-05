@@ -468,8 +468,10 @@ def push_notification(results):
         headers = {"Content-Type": "application/json"}
 
         payload = {
-            "title": "Testing",
-            "body": json.dumps(results, default=serialize_date),
+            "title": "6/" + results[0].get("category"),
+            "body": json.dumps(
+                results[0].get('prize_amount', {}).get('message'), 
+                default=serialize_date),
         }
 
         response = requests.post(
