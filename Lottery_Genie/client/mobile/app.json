@@ -36,7 +36,13 @@
       "expo-font",
       "expo-sqlite",
       "expo-build-properties",
-      "@react-native-firebase/app"
+      "@react-native-firebase/app",
+      "expo-notifications",
+        {
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": false
+        }
     ],
     "experiments": {
       "typedRoutes": true

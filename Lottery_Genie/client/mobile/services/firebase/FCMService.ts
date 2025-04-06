@@ -1,8 +1,17 @@
-import { PushNotificationType } from "@/types/results-type";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Alert } from "react-native";
 import "react-native-get-random-values";
 import { v4 as uuidv4 } from 'uuid';
+import {scheduleNotificationAsync, setNotificationHandler } from "expo-notifications";
+
+
+setNotificationHandler({
+    handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowAlert: false
+    })
+})
 
 export async function requestUserPermission() {
     const auth_status = await messaging().requestPermission();
@@ -34,10 +43,13 @@ export async function getFcmToken() {
 export function setupMessageListeners() {
     const unsubscribe = messaging().onMessage(async (remote_message: FirebaseMessagingTypes.RemoteMessage) => {
         if (remote_message.notification) {
-            Alert.alert(
-              remote_message.notification.title || "New Message",
-              remote_message.notification.body || JSON.stringify(remote_message)
-            );
+            await scheduleNotificationAsync({
+                content: {
+                    title: remote_message.notification.title || "New Message",
+                    body: remote_message.notification.body?.replaceAll('"', '') || JSON.stringify(remote_message)
+                },
+                trigger: null
+            })
           } else {
             Alert.alert("Lotto Genie", JSON.stringify(remote_message));
           }
