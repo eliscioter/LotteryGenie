@@ -7,9 +7,9 @@ import {scheduleNotificationAsync, setNotificationHandler } from "expo-notificat
 
 setNotificationHandler({
     handleNotification: async () => ({
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowAlert: false
+        shouldPlaySound: false,
+        shouldSetBadge: true,
+        shouldShowAlert: true
     })
 })
 

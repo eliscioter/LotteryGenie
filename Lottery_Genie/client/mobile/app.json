@@ -37,16 +37,12 @@
       "expo-sqlite",
       "expo-build-properties",
       "@react-native-firebase/app",
-      "expo-notifications",
-        {
-          "color": "#ffffff",
-          "defaultChannel": "default",
-          "enableBackgroundRemoteNotifications": false
-        }
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
     },
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "useNextNotificationsApi": true
   }
 }
