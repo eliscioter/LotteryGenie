@@ -40,3 +40,21 @@ export const fetchFCMToken = async () => {
     return [];
   }
 };
+
+export const fetchCorrelationId = async () => {
+  try {
+    if (!db) {
+      console.error("Database not initialized");
+      return [];
+    }
+
+    const result: FCMTokenType | null = await db.getFirstAsync(
+      `SELECT correlation_token FROM ${fcm_token_table}`
+    );
+
+    return result?.correlation_token;
+  } catch (error) {
+    console.error("Error fetching correlation token history", error);
+    return [];
+  }
+};
