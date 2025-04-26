@@ -22,7 +22,7 @@ export const useCurrentResults = () =>
   });
 
 export const useCheckCombinationMutation = () =>
-  useMutation<ResultsType & RequestError, AxiosError, LottoDetails>({
+  useMutation<(ResultsType & {"correlation_id": string}) & RequestError, AxiosError, LottoDetails>({
     mutationFn: async (data) =>
       (await api.django.post("/check-combinations", data)).data,
   });

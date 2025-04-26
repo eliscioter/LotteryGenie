@@ -18,11 +18,11 @@ import { LottoDetails } from "@/types/results-type";
 import { InputSchema } from "@/validators/current-results";
 import { useCurrentResultStore } from "@/services/shared/result";
 import Colors from "@/constants/Colors";
-import { useSQLiteContext } from "expo-sqlite";
 import { addHistory } from "@/services/db/lotto-combinations";
 import { UpdateHistoryDetailsCtx } from "@/services/shared/history-details-ctx";
 import { FontAwesome } from "@expo/vector-icons";
 import { ModalCtx } from "@/services/shared/modal";
+import { fetchCorrelationId } from "@/services/db/fcm-token";
 
 export default function InputForm() {
   const [date, setDate] = useState<string | Date>("Select Date");
@@ -96,7 +96,14 @@ export default function InputForm() {
       delete_user_comb_state();
       const truncated_date = truncateDate(date.toString()).trim();
 
-      await mutateAsync(data);
+      const submit_data = {
+        "category": data.category,
+        "date": data.date,
+        "combination": data.combination,
+        "correlation_id": await fetchCorrelationId()
+      }
+
+      await mutateAsync(submit_data);
 
       const combined_combination = data.combination
         .map((item) => item.value)
