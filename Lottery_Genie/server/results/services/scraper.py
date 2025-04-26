@@ -5,6 +5,7 @@ This is also to fetch the data from the database and return it to the user
 
 import os
 from datetime import date, datetime
+import re
 
 from bs4 import BeautifulSoup
 import requests
@@ -346,8 +347,7 @@ def reconvert_to_array(combination):
     """Reconvert the combination to an array"""
     return [str(num) for num in combination.split("-")]
 
-
-def check_combinations(combinations, category, draw_date):
+def check_combinations(combinations, category, draw_date, correlation_id):
     """Check if the combination is a winning combination and return the details"""
     games = {
         "6/42 Lotto": "6/42 Lotto",
@@ -358,12 +358,35 @@ def check_combinations(combinations, category, draw_date):
     }
     try:
         data = Summary.objects
+        current_data = Results.objects
 
         parsed_date = datetime.fromisoformat(draw_date).strftime("%Y-%m-%d")
 
         extracted_category = category.split("/")[1].split(" ")[0]
         if category not in games:
             return {"error": {"message": "Invalid category"}}
+
+        numbers_joined = ["-".join(item["value"]) for item in combinations]
+
+        results_arr = []
+
+        pattern = r'^(\d{1,2}-){5}\d{1,2}$'
+
+        entry = current_data.filter(category=category, date=parsed_date).values().first()
+
+        if entry:
+            combination = entry['combination']
+            if not re.match(pattern, combination):
+                results_arr.append(
+                    {
+                        "prize_amount": { 
+                            "message" : "We’ll let you know when the lotto results are out." 
+                            }
+                    }
+                )
+                # call to the scheduler in Spring boot to recheck again
+                # pass the correlation id to the Spring Boot server so it knows where to send the notification
+                return {"data": results_arr}
 
         if not data.filter(category=extracted_category).exists():
             res = scrape_summary(category=extracted_category)
@@ -380,9 +403,7 @@ def check_combinations(combinations, category, draw_date):
             if res == -1:
                 return {"error": {"message": "No data"}}
 
-        numbers_joined = ["-".join(item["value"]) for item in combinations]
 
-        results_arr = []
         for value in numbers_joined:
             winning_combination = data.filter(
                 category=extracted_category, combination=value, date=parsed_date
@@ -445,7 +466,7 @@ def check_combinations(combinations, category, draw_date):
 
         if len(results_arr) == 0:
             return {"data": "No data"}
-        push_notification(results_arr)
+        push_notification(results_arr, correlation_id)
         return {"data": results_arr}
     except (ValueError, TypeError) as e:
         print(f"Error: {e}")
@@ -459,7 +480,7 @@ def serialize_date(obj):
     raise TypeError(f"Type {type(obj)} not serializable")
 
 
-def push_notification(results):
+def push_notification(results, correlation_id):
     """
     Push notification to the user using the Spring server
     """
@@ -468,14 +489,15 @@ def push_notification(results):
         headers = {"Content-Type": "application/json"}
 
         payload = {
+            "correlation_id": correlation_id,
             "title": "6/" + results[0].get("category"),
             "body": json.dumps(
-                results[0].get('prize_amount', {}).get('message'), 
+                results[0].get('prize_amount', {}).get('message'),
                 default=serialize_date),
         }
 
         response = requests.post(
-            url + "/notification/send-to-all",
+            url + "/notification/send",
             json=payload,
             headers=headers,
             timeout=10,
