@@ -34,9 +34,8 @@ def delete(_):
 
 # LottoDetails is a NamedTuple that represents the data structure of the request body.
 LottoDetails = NamedTuple(
-    "LottoDetails", [("combination", str), ("category", str), ("date", str)]
+    "LottoDetails", [("combination", str), ("category", str), ("date", str), ("correlation_id", str)]
 )
-
 
 @csrf_exempt
 def combinations(request):
@@ -47,7 +46,7 @@ def combinations(request):
     data = json.loads(request.body.decode())
     lotto_details = LottoDetails(**data)
     response = scraper.check_combinations(
-        lotto_details.combination, lotto_details.category, lotto_details.date
+        lotto_details.combination, lotto_details.category, lotto_details.date, lotto_details.correlation_id
     )
     return JsonResponse(response)
 
